@@ -1,0 +1,273 @@
+@model IEnumerable<BoardPaySystem.Models.ApplicationUser>
+@{
+    ViewData["Title"] = "Archived Tenants";
+    Layout = "_LandlordLayout";
+}
+
+<div class="content-section">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="page-title mb-0">
+            <i class="fas fa-archive"></i>
+            Archived Tenants
+        </h3>
+        <a asp-action="ManageTenants" class="btn btn-primary">
+            <i class="fas fa-users"></i> Back to Tenants
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-archive"></i> Archived Tenants</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Building</th>
+                            <th>Room</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tenant in Model)
+                        {
+                            <tr>
+                                <td>@tenant.FirstName @tenant.LastName</td>
+                                <td>@tenant.PhoneNumber</td>
+                                <td>@(tenant.CurrentRoom?.Floor?.Building?.BuildingName ?? "Not Assigned")</td>
+                                <td>@(tenant.CurrentRoom?.RoomNumber ?? "Not Assigned")</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-success btn-sm" onclick="restoreTenant('@tenant.Id', this)">
+                                            <i class="fas fa-undo"></i> Restore
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteTenant('@tenant.Id', this)">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Restore Confirmation Modal -->
+<div class="modal fade" id="restoreConfirmModal" tabindex="-1" aria-labelledby="restoreConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="restoreConfirmModalLabel">
+                    <i class="fas fa-undo me-2"></i>
+                    Confirm Tenant Restore
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="restoreUnpaidWarning" style="display:none;"></div>
+                <p>Are you sure you want to restore the tenant "<span id="restoreTenantName" class="fw-bold"></span>"?</p>
+                <div class="alert alert-info mt-2">
+                    Restoring this tenant will allow them to be assigned a room and generate a new bill for their next stay.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-success" id="confirmRestoreBtn">
+                    <i class="fas fa-undo me-1"></i>
+                    Restore Tenant
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirm Tenant Deletion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Warning: This action cannot be undone! All bills, contracts, and payment records for this tenant will be permanently deleted.
+                </div>
+                <p>Are you sure you want to delete the tenant "<span id="deleteTenantName" class="fw-bold"></span>"?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash me-1"></i>
+                    Delete Tenant
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let activeModal = null;
+    function forceCleanupModals() {
+        // Remove all modal backdrops first
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => {
+            backdrop.classList.remove('show');
+            backdrop.remove();
+        });
+        // Clean up body
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        // Reset all modals
+        document.querySelectorAll('.modal').forEach(modal => {
+            const bsModal = bootstrap.Modal.getInstance(modal);
+            if (bsModal) {
+                bsModal.dispose();
+            }
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
+            modal.removeAttribute('aria-modal');
+            modal.removeAttribute('role');
+        });
+        // Force remove any remaining backdrop
+        const remainingBackdrops = document.querySelectorAll('.modal-backdrop');
+        remainingBackdrops.forEach(backdrop => backdrop.remove());
+        // Reset active modal
+        activeModal = null;
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        forceCleanupModals();
+        // Attach cleanup to modals
+        const modals = ['restoreConfirmModal', 'deleteConfirmModal'];
+        modals.forEach(modalId => {
+            const modalElement = document.getElementById(modalId);
+            if (!modalElement) return;
+            const modal = new bootstrap.Modal(modalElement, { backdrop: false });
+            modalElement.addEventListener('hidden.bs.modal', forceCleanupModals);
+            modalElement.addEventListener('show.bs.modal', function() {
+                if (activeModal) {
+                    activeModal.hide();
+                    forceCleanupModals();
+                }
+                activeModal = modal;
+            });
+        });
+        // Handle clicks outside modals
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                forceCleanupModals();
+            }
+        });
+        // Handle escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                forceCleanupModals();
+            }
+        });
+    });
+    function restoreTenant(tenantId, btn) {
+        // Show confirmation modal with warning logic
+        const tenantName = $(btn).closest('tr').find('td:first').text();
+        document.getElementById('restoreTenantName').textContent = tenantName;
+        const warningDiv = document.getElementById('restoreUnpaidWarning');
+        const restoreBtn = document.getElementById('confirmRestoreBtn');
+        warningDiv.style.display = 'none';
+        // Reset restore button state and handler
+        restoreBtn.onclick = null;
+        restoreBtn.disabled = false;
+        restoreBtn.innerHTML = '<i class="fas fa-undo me-1"></i> Restore Tenant';
+        // Check for unpaid or written-off bills
+        fetch(`/Landlord/CheckUnpaidBills?tenantId=${tenantId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.hasUnpaid) {
+                    warningDiv.innerHTML = `<div class='alert alert-danger'><b>Cannot restore:</b> This tenant has ₱${data.total.toLocaleString()} in unpaid or written-off bills for: <ul>${data.periods.map(p => `<li>${p}</li>`).join('')}</ul>\nYou must resolve all outstanding bills before restoring this tenant.</div>`;
+                    warningDiv.style.display = 'block';
+                    restoreBtn.disabled = true;
+                }
+            });
+        restoreBtn.onclick = function() {
+            btn.disabled = true;
+            restoreBtn.disabled = true;
+            restoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Restoring...';
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            const formData = new URLSearchParams();
+            formData.append('id', tenantId);
+            formData.append('__RequestVerificationToken', token);
+            fetch('/Landlord/RestoreTenant', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = `/Landlord/TenantDetails/${tenantId}`;
+                } else {
+                    alert(data.message || 'Failed to restore tenant.');
+                    btn.disabled = false;
+                    restoreBtn.disabled = false;
+                    restoreBtn.innerHTML = '<i class="fas fa-undo me-1"></i> Restore Tenant';
+                }
+            });
+        };
+        forceCleanupModals();
+        const modal = new bootstrap.Modal(document.getElementById('restoreConfirmModal'), { backdrop: false });
+        modal.show();
+        activeModal = modal;
+    }
+    function deleteTenant(tenantId, btn) {
+        const tenantName = $(btn).closest('tr').find('td:first').text();
+        document.getElementById('deleteTenantName').textContent = tenantName;
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        // Reset delete button state and handler
+        confirmDeleteBtn.onclick = null;
+        confirmDeleteBtn.disabled = false;
+        confirmDeleteBtn.innerHTML = '<i class="fas fa-trash me-1"></i> Delete Tenant';
+        confirmDeleteBtn.onclick = function() {
+            btn.disabled = true;
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+            fetch(`/Landlord/DeleteTenant/${tenantId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                forceCleanupModals();
+                if (data.success) {
+                    $(btn).closest('tr').fadeOut(400, function() { $(this).remove(); });
+                } else {
+                    alert(data.message || 'Failed to delete tenant.');
+                    btn.disabled = false;
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-trash"></i> Delete';
+                }
+            });
+        };
+        forceCleanupModals();
+        const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'), { backdrop: false });
+        modal.show();
+        activeModal = modal;
+    }
+</script>
+} 

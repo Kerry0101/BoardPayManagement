@@ -1,0 +1,712 @@
+﻿@model IEnumerable<BoardPaySystem.Models.BuildingListViewModel>
+@{
+    ViewData["Title"] = "Manage Buildings";
+    Layout = "_LandlordLayout";
+}
+
+@* Hidden anti-forgery token for AJAX requests *@
+@Html.AntiForgeryToken()
+
+<div class="content-section">
+    @* <form method="get" id="building-filter-form" class="mb-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-auto">
+                <label for="buildingId" class="form-label mb-0">Filter by Building:</label>
+                <select id="buildingId" name="buildingId" class="form-select form-select-sm" style="width:auto;display:inline-block;" onchange="document.getElementById('building-filter-form').submit()">
+                    <option value="">All Buildings</option>
+                    @if (ViewBag.AllBuildings != null)
+                    {
+                        foreach (var b in ViewBag.AllBuildings)
+                        {
+                            if (ViewBag.CurrentBuildingId != null && b.BuildingId == (int)ViewBag.CurrentBuildingId)
+                            {
+                                <option value="@b.BuildingId" selected>@b.BuildingName</option>
+                            }
+                            else
+                            {
+                                <option value="@b.BuildingId">@b.BuildingName</option>
+                            }
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+    </form> *@
+    <div class="page-header">
+        <div class="header-content">
+            <h3>
+                <i class="fas fa-building"></i>
+                Manage Buildings
+            </h3>
+            <a asp-action="AddBuilding" class="btn-add">
+                <i class="fas fa-plus"></i>
+                Add New Building
+            </a>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i>
+                @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        
+        @if (TempData["Info"] != null)
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="fas fa-info-circle"></i>
+                @TempData["Info"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-state-content">
+                <i class="fas fa-building fa-3x"></i>
+                <h4>No Buildings Yet</h4>
+                <p>Get started by adding your first building!</p>
+                <a asp-action="AddBuilding" class="btn-add mt-3">
+                    <i class="fas fa-plus"></i>
+                    Add New Building
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="buildings-list">
+            @foreach (var building in Model)
+            {
+                <div class="building-item">
+                    <div class="building-info">
+                        <h4>@building.BuildingName</h4>
+                        <span class="building-address">
+                            <i class="fas fa-map-marker-alt"></i>
+                            @building.Address
+                        </span>
+                    </div>
+                    <div class="building-actions">
+                        <a asp-action="BuildingDetails" asp-route-id="@building.BuildingId" 
+                           class="btn-icon" title="View Details">
+                            <i class="fas fa-info-circle"></i>
+                        </a>
+                        <a asp-action="EditBuilding" asp-route-id="@building.BuildingId" 
+                           class="btn-icon" title="Edit Building">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button onclick="confirmDelete(@building.BuildingId, '@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(building.BuildingName))')" 
+                                class="btn-icon btn-icon-danger" title="Delete Building">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Delete Building Warning Modal -->
+<div class="modal fade" id="deleteBuildingWarningModal" tabindex="-1" aria-labelledby="deleteBuildingWarningModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteBuildingWarningModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Warning: Delete Building
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>This action cannot be undone!</strong>
+                </div>
+                <p>Are you sure you want to delete "<span id="buildingNameToDelete" class="fw-bold"></span>"?</p>
+                <div class="warning-list">
+                    <p><i class="fas fa-exclamation-triangle text-danger"></i> The following will be permanently deleted:</p>
+                    <ul>
+                        <li>All floors in this building</li>
+                        <li>All rooms and their configurations</li>
+                        <li>All tenant assignments to rooms</li>
+                        <li>All billing history associated with this building</li>
+                    </ul>
+                </div>
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Note:</strong> This will not delete tenant accounts, but they will be unassigned from their rooms.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button type="button" class="btn-warning" id="forceDeleteBuildingBtn" style="display: none;">
+                    <i class="fas fa-hammer"></i>
+                    Force Delete
+                </button>
+                <button type="button" class="btn-danger" id="confirmDeleteBuildingBtn">
+                    <i class="fas fa-trash"></i>
+                    Delete Building
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Building Warning Modal -->
+<div class="modal fade" id="editBuildingWarningModal" tabindex="-1" aria-labelledby="editBuildingWarningModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="editBuildingWarningModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Important Notice
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Please Note:</strong>
+                </div>
+                <ul class="warning-list">
+                    <li>Any changes to building fees (rent, utilities, etc.) will only take effect at the start of the next billing cycle.</li>
+                    <li>Existing tenants will be notified of any changes in their fees.</li>
+                    <li>Current month's billing will not be affected by these changes.</li>
+                </ul>
+                <p class="text-muted mt-3">
+                    <i class="fas fa-clock"></i>
+                    Changes will be applied starting: <strong>@(DateTime.Now.AddMonths(1).ToString("MMMM 1, yyyy"))</strong>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button type="button" class="btn-warning" id="proceedToEditBtn">
+                    <i class="fas fa-edit"></i>
+                    Proceed with Edit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentBuildingId = null;
+        let activeModal = null;
+        let editUrlToGo = null;
+
+        // Function to force cleanup all modal-related elements and styles
+        function forceCleanupModals() {
+            // Remove all modal backdrops first
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => {
+                backdrop.classList.remove('show');
+                backdrop.remove();
+            });
+
+            // Clean up body
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+
+            // Reset all modals
+            document.querySelectorAll('.modal').forEach(modal => {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.dispose();
+                }
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+                modal.removeAttribute('aria-modal');
+                modal.removeAttribute('role');
+            });
+
+            // Force remove any remaining backdrop
+            const remainingBackdrops = document.querySelectorAll('.modal-backdrop');
+            remainingBackdrops.forEach(backdrop => backdrop.remove());
+
+            // Reset active modal
+            activeModal = null;
+        }
+
+        // Initialize all modals with proper options
+        document.addEventListener('DOMContentLoaded', function() {
+            const modals = ['deleteBuildingWarningModal', 'editBuildingWarningModal'];
+
+            // Initial cleanup
+            forceCleanupModals();
+
+            modals.forEach(modalId => {
+                const modalElement = document.getElementById(modalId);
+                if (!modalElement) return;
+
+                // Initialize modal with specific options
+                if (typeof bootstrap !== 'undefined') {
+                    const modal = new bootstrap.Modal(modalElement, {
+                        backdrop: false,
+                        keyboard: true
+                    });
+
+                    // Handle modal events
+                    modalElement.addEventListener('hidden.bs.modal', forceCleanupModals);
+                    modalElement.addEventListener('show.bs.modal', function() {
+                        if (activeModal) {
+                            activeModal.hide();
+                            forceCleanupModals();
+                        }
+                        activeModal = modal;
+                    });
+                }
+            });
+
+            // Handle clicks outside modals
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    forceCleanupModals();
+                }
+            });
+
+            // Handle escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    forceCleanupModals();
+                }
+            });
+
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                document.querySelectorAll('.alert').forEach(alert => {
+                    if (alert) {
+                        alert.classList.remove('show');
+                        setTimeout(() => alert.remove(), 300);
+                    }
+                });
+            }, 5000);
+
+            // Add Edit Building warning modal logic
+            document.querySelectorAll('a[title="Edit Building"]').forEach(function(editBtn) {
+                editBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    editUrlToGo = this.getAttribute('href');
+                    showModal('editBuildingWarningModal');
+                    document.getElementById('proceedToEditBtn').onclick = function() {
+                        window.location.href = editUrlToGo;
+                    };
+                });
+            });
+        });
+
+        function showModal(modalId) {
+            forceCleanupModals();
+            const modalElement = document.getElementById(modalId);
+            
+            // Ensure Bootstrap is properly accessed
+            if (typeof bootstrap === 'undefined') {
+                console.error('Bootstrap is not defined. Make sure bootstrap.bundle.min.js is loaded properly.');
+                alert('An error occurred. Please try again or refresh the page.');
+                return;
+            }
+            
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: false,
+                keyboard: true
+            });
+            
+            modal.show();
+            activeModal = modal;
+        }
+
+        function confirmDelete(buildingId, buildingName) {
+            currentBuildingId = buildingId;
+            
+            // Set the building name in the modal
+            document.getElementById('buildingNameToDelete').textContent = buildingName;
+            
+            // Show the warning modal
+            showModal('deleteBuildingWarningModal');
+
+            // Set up the confirm delete button handler
+            document.getElementById('confirmDeleteBuildingBtn').onclick = function() {
+                deleteBuilding(buildingId);
+            };
+        }
+
+        function deleteBuilding(buildingId) {
+            // Get anti-forgery token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            
+            // Disable confirm button and show loading state
+            const confirmBtn = document.getElementById('confirmDeleteBuildingBtn');
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+            confirmBtn.disabled = true;
+            
+            // Send delete request
+            fetch('@Url.Action("DeleteBuilding", "Landlord")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: `id=${encodeURIComponent(buildingId)}&__RequestVerificationToken=${encodeURIComponent(token)}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (result.success) {
+                    // Successful deletion
+                    forceCleanupModals();
+                    showSuccessAlert("Building deleted successfully!");
+                    
+                    // Reload the page after a short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    // Failed to delete, show Force Delete option
+                    confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Building';
+                    confirmBtn.disabled = false;
+                    
+                    const forceDeleteBtn = document.getElementById('forceDeleteBuildingBtn');
+                    forceDeleteBtn.style.display = 'inline-flex';
+                    
+                    forceDeleteBtn.onclick = function() {
+                        forceDeleteBuilding(buildingId);
+                    };
+                    
+                    // Remove any existing error messages
+                    document.querySelectorAll('.modal-body .alert-danger, .modal-body .alert-warning').forEach(el => {
+                        if (!el.classList.contains('initial-warning')) {
+                            el.remove();
+                        }
+                    });
+                    
+                    // Show error message
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'alert alert-danger mt-3';
+                    errorMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${result.message}`;
+                    document.querySelector('#deleteBuildingWarningModal .modal-body').appendChild(errorMessage);
+                    
+                    const noteMessage = document.createElement('div');
+                    noteMessage.className = 'alert alert-warning mt-2';
+                    noteMessage.innerHTML = `<i class="fas fa-info-circle"></i> <strong>Try Force Delete:</strong> This will bypass validation checks and forcibly remove the building and all related data.`;
+                    document.querySelector('#deleteBuildingWarningModal .modal-body').appendChild(noteMessage);
+                }
+            })
+            .catch(error => {
+                // Re-enable button on error
+                confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Building';
+                confirmBtn.disabled = false;
+                
+                console.error('Error:', error);
+                
+                // Show error in the modal
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'alert alert-danger mt-3';
+                errorMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> An error occurred while deleting the building. Please try again.`;
+                document.querySelector('#deleteBuildingWarningModal .modal-body').appendChild(errorMessage);
+                
+                const forceDeleteBtn = document.getElementById('forceDeleteBuildingBtn');
+                forceDeleteBtn.style.display = 'inline-flex';
+                
+                forceDeleteBtn.onclick = function() {
+                    forceDeleteBuilding(buildingId);
+                };
+            });
+        }
+        
+        function forceDeleteBuilding(buildingId) {
+            // Show loading indicator
+            const forceDeleteBtn = document.getElementById('forceDeleteBuildingBtn');
+            const originalText = forceDeleteBtn.innerHTML;
+            forceDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Forcing Delete...';
+            forceDeleteBtn.disabled = true;
+            
+            // Get anti-forgery token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            
+            // Send force delete request
+            fetch('@Url.Action("ForceDeleteBuilding", "Landlord")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: `id=${encodeURIComponent(buildingId)}&__RequestVerificationToken=${encodeURIComponent(token)}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (result.success) {
+                    // Successful deletion
+                    forceCleanupModals();
+                    showSuccessAlert("Building forcefully deleted successfully!");
+                    
+                    // Reload the page after a short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    // Failed to force delete
+                    forceCleanupModals();
+                    showErrorAlert(result.message || 'Failed to force delete building.');
+                    
+                    // Re-enable button
+                    forceDeleteBtn.innerHTML = originalText;
+                    forceDeleteBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                forceCleanupModals();
+                showErrorAlert('An unexpected error occurred during force deletion.');
+                
+                // Re-enable button
+                forceDeleteBtn.innerHTML = originalText;
+                forceDeleteBtn.disabled = false;
+            });
+        }
+        
+        function showSuccessAlert(message) {
+            const alertHtml = `
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`;
+            document.querySelector('.content-section').insertAdjacentHTML('afterbegin', alertHtml);
+        }
+
+        function showErrorAlert(message) {
+            const alertHtml = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`;
+            document.querySelector('.content-section').insertAdjacentHTML('afterbegin', alertHtml);
+        }
+    </script>
+}
+
+<style>
+    .page-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .header-content h3 {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #2c3e50;
+    }
+
+    .btn-add {
+        background: #2ecc71;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: background-color 0.2s;
+    }
+
+    .btn-add:hover {
+        background: #27ae60;
+        color: white;
+    }
+
+    .empty-state {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .empty-state-content {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .empty-state i {
+        color: #95a5a6;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h4 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: #7f8c8d;
+        margin-bottom: 1.5rem;
+    }
+
+    .buildings-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+    }
+
+    .building-item {
+        background: white;
+        padding: 0.875rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.2s;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .building-item:last-child {
+        border-bottom: none;
+    }
+
+    .building-item:hover {
+        background-color: #f8fafc;
+    }
+
+    .building-info {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .building-info h4 {
+        margin: 0;
+        font-size: 0.9375rem;
+        font-weight: 500;
+        color: #2c3e50;
+        min-width: 200px;
+    }
+
+    .building-address {
+        color: #6c757d;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .building-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-icon {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        border: none;
+        background: #e9ecef;
+        color: #495057;
+        transition: all 0.2s;
+        font-size: 0.875rem;
+    }
+
+    .btn-icon:hover {
+        background: #dee2e6;
+        color: #212529;
+    }
+
+    .btn-icon-danger {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .btn-icon-danger:hover {
+        background: #fecaca;
+        color: #b91c1c;
+    }
+
+    @@media (max-width: 768px) {
+        .header-content {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .building-item {
+            flex-direction: column;
+            gap: 0.75rem;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .building-info {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .building-info h4 {
+            min-width: unset;
+        }
+
+        .building-actions {
+            justify-content: center;
+        }
+    }
+
+    .warning-list {
+        background: #fff5f5;
+        border-radius: 6px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .warning-list p {
+        margin-bottom: 0.5rem;
+        color: #dc3545;
+        font-weight: 500;
+    }
+
+    .warning-list ul {
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+
+    .warning-list ul li {
+        margin-bottom: 0.5rem;
+        color: #666;
+    }
+
+    .warning-list ul li:last-child {
+        margin-bottom: 0;
+    }
+</style>

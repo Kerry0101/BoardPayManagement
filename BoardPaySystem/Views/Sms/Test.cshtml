@@ -1,0 +1,163 @@
+@model BoardPaySystem.Models.SmsTestViewModel
+@{
+    ViewData["Title"] = "Test SMS";
+    Layout = "_LandlordLayout";
+}
+
+<div class="content-section">
+    <h3 class="page-title">
+        <i class="fas fa-sms"></i>
+        Test SMS Service
+    </h3>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Send Test SMS</h5>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i> @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Test" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="PhoneNumber" class="control-label"></label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="+1234567890" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                            <small class="text-muted">Enter phone number with country code (e.g., +1234567890)</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Message" class="control-label"></label>
+                            <textarea asp-for="Message" class="form-control" rows="4" placeholder="Enter your message here..."></textarea>
+                            <span asp-validation-for="Message" class="text-danger"></span>
+                            <small class="text-muted d-flex justify-content-between">
+                                <span>Standard SMS messages are limited to 160 characters.</span>
+                                <span id="charCount">0/160</span>
+                            </small>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i> Send Test SMS
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Semaphore Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> Your Semaphore account is configured and ready to use.
+                    </div>
+                    
+                    <p>
+                        <strong>Sender Name:</strong> <span id="semaphoreSender">BoardPay (from config)</span>
+                    </p>
+                    
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i> Important Notes:</h6>
+                        <ul class="mb-0">
+                            <li>SMS messages may incur charges based on your Semaphore plan.</li>
+                            <li>Free trial accounts can only send to verified numbers.</li>
+                            <li>International SMS messages may have additional restrictions.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Usage Guide</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="fw-bold">SMS Notifications in BoardPay</h6>
+                    <p>
+                        The BoardPay system now has SMS capability for important notifications to tenants:
+                    </p>
+                    
+                    <div class="list-group mb-4">
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Bill Approval Notifications</h6>
+                                <small><i class="fas fa-check text-success"></i> Implemented</small>
+                            </div>
+                            <p class="mb-1">Tenants receive SMS when their bills are approved.</p>
+                        </div>
+                          <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Payment Confirmation</h6>
+                                <small><i class="fas fa-check text-success"></i> Implemented</small>
+                            </div>
+                            <p class="mb-1">Tenants receive SMS when their payments are confirmed.</p>
+                        </div>
+                          <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Due Date Reminders</h6>
+                                <small><i class="fas fa-check text-success"></i> Implemented</small>
+                            </div>
+                            <p class="mb-1">Tenants receive SMS reminders about upcoming bills 3 days before due date.</p>
+                        </div>
+                        
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Late Payment Notices</h6>
+                                <small><i class="fas fa-check text-success"></i> Implemented</small>
+                            </div>
+                            <p class="mb-1">Tenants receive SMS notifications about overdue bills with late fee details.</p>
+                        </div>
+                    </div>
+                    
+                    <h6 class="fw-bold">Requirements</h6>
+                    <p>For tenants to receive SMS notifications:</p>
+                    <ul>
+                        <li>The tenant must have a valid phone number in their profile.</li>
+                        <li>The phone number must include the country code (e.g., +63 for PH).</li>
+                        <li>The Semaphore account must have sufficient credits/balance.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            $('#Message').on('input', function() {
+                var charCount = $(this).val().length;
+                $('#charCount').text(charCount + '/160');
+                
+                if (charCount > 160) {
+                    $('#charCount').addClass('text-danger fw-bold');
+                } else {
+                    $('#charCount').removeClass('text-danger fw-bold');
+                }
+            });
+        });
+    </script>
+}

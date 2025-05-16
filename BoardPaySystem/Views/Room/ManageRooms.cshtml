@@ -1,0 +1,424 @@
+@{
+    Layout = "_LandlordLayout";
+}
+
+@model IEnumerable<Room>
+@{
+    ViewData["Title"] = "Manage Rooms";
+    var floor = ViewBag.Floor as Floor;
+    var building = ViewBag.Building as Building;
+}
+
+@* Hidden anti-forgery token for AJAX requests *@
+@Html.AntiForgeryToken()
+
+<div class="content-section">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-controller="Landlord" asp-action="ManageBuildings">Buildings</a>
+            </li>
+            @if (building != null)
+            {
+                <li class="breadcrumb-item">
+                    <a asp-controller="Landlord" asp-action="BuildingDetails" asp-route-id="@building.BuildingId">@building.BuildingName</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-controller="Floor" asp-action="ManageFloors" asp-route-buildingId="@building.BuildingId">Floors</a>
+                </li>
+            }
+            @if (floor != null)
+            {
+                <li class="breadcrumb-item active">Floor @floor.FloorNumber</li>
+            }
+        </ol>
+    </nav>
+
+    <div class="section-header">
+        <h3>
+            <span>
+                <i class="fas fa-door-closed"></i>
+                @if (floor != null)
+                {
+                    <text>Rooms on Floor @floor.FloorNumber</text>
+                }
+                else
+                {
+                    <text>Manage Rooms</text>
+                }
+            </span>
+            @if (floor != null)
+            {
+                <a asp-action="AddRoom" asp-route-floorId="@floor.FloorId" class="btn-add">
+                    <i class="fas fa-plus"></i> Add New Room
+                </a>
+            }
+        </h3>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i>
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i>
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-state-content">
+                <i class="fas fa-door-closed fa-3x"></i>
+                <h4>No Rooms Yet</h4>
+                <p>Get started by adding your first room!</p>
+                <a asp-action="AddRoom" asp-route-floorId="@floor.FloorId" class="btn-add mt-3">
+                    <i class="fas fa-plus"></i>
+                    Add New Room
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="rooms-list">
+            <div class="rooms-header">
+                <div class="room-col room-number">Room Number</div>
+                <div class="room-col room-status">Status</div>
+                <div class="room-col room-rent">Rent</div>
+                <div class="room-col room-actions">Actions</div>
+            </div>
+            @foreach (var room in Model)
+            {
+                <div class="room-row @(room.IsOccupied ? "occupied" : "")">
+                    <div class="room-col room-number">@room.RoomNumber</div>
+                    <div class="room-col room-status">
+                        <i class="fas fa-user"></i> @(room.IsOccupied ? "Occupied" : "Vacant")
+                    </div>
+                    <div class="room-col room-rent">
+                        <i class="fas fa-money-bill"></i> ₱@(room.CustomMonthlyRent ?? building?.DefaultMonthlyRent ?? 0)
+                    </div>
+                    <div class="room-col room-actions">
+                        <a asp-action="EditRoom" asp-route-id="@room.RoomId" class="btn-icon" title="Edit Room">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" class="btn-icon btn-icon-danger" onclick="confirmDeleteRoom(@room.RoomId, '@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(room.RoomNumber))')" title="Delete Room">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Warning Modal -->
+<div class="modal fade" id="warningModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="warningModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="warningModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Warning
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="warningMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Room Modal -->
+<div class="modal fade" id="deleteRoomModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="deleteRoomModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteRoomModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Confirm Delete Room
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>This action cannot be undone!</strong>
+                </div>
+                <p>Are you sure you want to delete Room <span id="roomNumberToDelete" class="fw-bold"></span>?</p>
+                <div class="warning-list">
+                    <p><i class="fas fa-exclamation-triangle text-danger"></i> The following will be permanently deleted:</p>
+                    <ul>
+                        <li>All billing records associated with this room</li>
+                        <li>All contract records associated with this room</li>
+                        <li>All meter readings associated with this room</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button type="button" id="confirmDeleteRoomBtn" class="btn-danger">
+                    <i class="fas fa-trash"></i>
+                    Delete Room
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentRoomId = null;
+        let activeModal = null;
+        
+        // Function to force cleanup all modal-related elements and styles
+        function forceCleanupModals() {
+            // Remove all modal backdrops first
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => {
+                backdrop.classList.remove('show');
+                backdrop.remove();
+            });
+
+            // Clean up body
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+
+            // Reset all modals
+            document.querySelectorAll('.modal').forEach(modal => {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.dispose();
+                }
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+                modal.removeAttribute('aria-modal');
+                modal.removeAttribute('role');
+            });
+
+            // Force remove any remaining backdrop
+            const remainingBackdrops = document.querySelectorAll('.modal-backdrop');
+            remainingBackdrops.forEach(backdrop => backdrop.remove());
+
+            // Reset active modal
+            activeModal = null;
+        }
+        
+        // Initialize all modals with proper options
+        document.addEventListener('DOMContentLoaded', function() {
+            const modals = [
+                'warningModal',
+                'deleteRoomModal'
+            ];
+
+            // Initial cleanup
+            forceCleanupModals();
+            
+            // Ensure Bootstrap is properly defined before continuing
+            if (typeof bootstrap === 'undefined') {
+                console.error('Bootstrap is not defined. Check if bootstrap.bundle.min.js is loaded properly.');
+                return;
+            }
+
+            modals.forEach(modalId => {
+                const modalElement = document.getElementById(modalId);
+                if (!modalElement) return;
+
+                // Initialize modal with specific options
+                const modal = new bootstrap.Modal(modalElement, {
+                    backdrop: false, // Disable Bootstrap's backdrop handling
+                    keyboard: true    // Allow escape key to close
+                });
+
+                // Handle modal events
+                modalElement.addEventListener('hidden.bs.modal', forceCleanupModals);
+                modalElement.addEventListener('show.bs.modal', function() {
+                    if (activeModal) {
+                        activeModal.hide();
+                        forceCleanupModals();
+                    }
+                    activeModal = modal;
+                });
+            });
+
+            // Handle clicks outside modals
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    forceCleanupModals();
+                }
+            });
+
+            // Handle escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    forceCleanupModals();
+                }
+            });
+
+            // Auto-dismiss alerts after some time
+            setTimeout(function() {
+                document.querySelectorAll('.alert').forEach(alert => {
+                    if (alert) {
+                        const bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    }
+                });
+            }, 5000);
+        });
+        
+        // Function to show a modal
+        function showModal(modalId) {
+            forceCleanupModals();
+            const modalElement = document.getElementById(modalId);
+            
+            // Ensure Bootstrap is properly accessed
+            if (typeof bootstrap === 'undefined') {
+                console.error('Bootstrap is not defined. Make sure bootstrap.bundle.min.js is loaded properly.');
+                alert('An error occurred. Please try again or refresh the page.');
+                return;
+            }
+            
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: false,
+                keyboard: true
+            });
+            
+            modal.show();
+            activeModal = modal;
+        }
+
+        // Function to show warning message in modal
+        function showWarning(message) {
+            document.getElementById('warningMessage').textContent = message;
+            showModal('warningModal');
+        }
+
+        // Function to confirm room deletion
+        function confirmDeleteRoom(roomId, roomNumber) {
+            currentRoomId = roomId;
+            document.getElementById('roomNumberToDelete').textContent = roomNumber;
+            
+            // Set up the confirm button
+            const confirmBtn = document.getElementById('confirmDeleteRoomBtn');
+            confirmBtn.onclick = function() {
+                deleteRoom(roomId);
+            };
+            
+            showModal('deleteRoomModal');
+        }
+
+        // Function to delete room
+        function deleteRoom(roomId) {
+            // Get the confirm button to show loading state
+            const confirmBtn = document.getElementById('confirmDeleteRoomBtn');
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+            
+            // Get anti-forgery token if it exists
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            
+            // Make the request
+            fetch('@Url.Action("DeleteRoom")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: `id=${roomId}&__RequestVerificationToken=${encodeURIComponent(token)}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Force cleanup modals
+                forceCleanupModals();
+                
+                if (data.success) {
+                    // Show success message and reload or redirect
+                    const alertHtml = `
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            ${data.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>`;
+                    document.querySelector('.content-section').insertAdjacentHTML('afterbegin', alertHtml);
+                    
+                    // Reload or redirect after a short delay
+                    setTimeout(() => {
+                        if (data.redirectUrl) {
+                            window.location.href = data.redirectUrl;
+                        } else {
+                            window.location.reload();
+                        }
+                    }, 1500);
+                } else {
+                    // Show error message
+                    showWarning(data.message || 'Error deleting room.');
+                    
+                    // Reset button
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Room';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // Force cleanup modals
+                forceCleanupModals();
+                
+                // Show error message
+                showWarning('An unexpected error occurred. Please try again.');
+                
+                // Reset button
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Room';
+            });
+        }
+    </script>
+
+    <style>
+        .warning-list {
+            background: #fff5f5;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .warning-list p {
+            margin-bottom: 0.5rem;
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .warning-list ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .warning-list ul li {
+            margin-bottom: 0.5rem;
+            color: #666;
+        }
+    </style>
+}

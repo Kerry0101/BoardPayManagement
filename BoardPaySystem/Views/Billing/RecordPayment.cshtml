@@ -1,0 +1,276 @@
+@model BoardPaySystem.Models.Bill
+@{
+    ViewData["Title"] = "Record Payment";
+    Layout = "_LandlordLayout";
+}
+
+<div class="content-section">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="page-title mb-0">
+            <i class="fas fa-money-bill-wave"></i>
+            Record Payment
+        </h3>
+        <a asp-action="Bills" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Bills
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="mb-4">
+                <h5>Bill Information</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Tenant:</strong> @Model.Tenant.FirstName @Model.Tenant.LastName</p>
+                        <p><strong>Room:</strong> @Model.Room.RoomNumber</p>
+                        <p><strong>Bill Date:</strong> @Model.BillingDate.ToString("MMMM d, yyyy")</p>
+                        @if (!string.IsNullOrEmpty(Model.Tenant?.PhoneNumber))
+                        {
+                            <p>
+                                <strong>Contact:</strong> 
+                                <a href="tel:@Model.Tenant.PhoneNumber">
+                                    <i class="fas fa-phone-alt me-1"></i> @Model.Tenant.PhoneNumber
+                                </a>
+                            </p>
+                        }
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Due Date:</strong> @Model.DueDate.ToString("MMMM d, yyyy")</p>
+                        <p><strong>Total Amount:</strong> @Model.TotalAmount.ToString("C")</p>
+                        <p><strong>Status:</strong> <span class="badge bg-@GetStatusClass(Model.Status)">@Model.Status</span></p>
+                        @if (Model.DueDate < DateTime.Now && Model.Status != BoardPaySystem.Models.BillStatus.Paid)
+                        {
+                            <p class="text-danger">
+                                <i class="fas fa-exclamation-circle"></i> 
+                                <strong>@(Math.Floor((DateTime.Now - Model.DueDate).TotalDays)) days overdue</strong>
+                            </p>
+                        }
+                    </div>
+                </div>
+                @if (Model.AmountPaid.HasValue && Model.AmountPaid.Value > 0)
+                {
+                    <div class="alert alert-info">
+                        <p class="mb-1"><strong>Amount Already Paid:</strong> @Model.AmountPaid.Value.ToString("C")</p>
+                        <p class="mb-0"><strong>Remaining Balance:</strong> @((Model.TotalAmount - Model.AmountPaid.Value).ToString("C"))</p>
+                    </div>
+                }
+            </div>
+
+            <hr />
+
+            <form asp-action="RecordPayment" method="post">
+                <input type="hidden" name="billId" value="@Model.BillId" />
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="amount" class="form-label">Payment Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₱</span>
+                                <input type="number" id="amount" name="amount" class="form-control" step="0.01" min="0.01" 
+                                       value="@(Model.AmountPaid.HasValue ? (Model.TotalAmount - Model.AmountPaid.Value) : Model.TotalAmount)" required />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="paymentDate" class="form-label">Payment Date</label>
+                            <input type="date" id="paymentDate" name="paymentDate" class="form-control" 
+                                   value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="form-label d-block">Payment Method</label>
+                    <div class="btn-group payment-method-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="paymentMethod" id="cash" value="Cash" checked>
+                        <label class="btn btn-outline-primary" for="cash">
+                            <i class="fas fa-money-bill-wave"></i> Cash
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="paymentMethod" id="gcash" value="GCash">
+                        <label class="btn btn-outline-primary" for="gcash">
+                            <i class="fas fa-mobile-alt"></i> GCash
+                        </label>
+                        
+                        @* <input type="radio" class="btn-check" name="paymentMethod" id="bank" value="Bank Transfer">
+                        <label class="btn btn-outline-primary" for="bank">
+                            <i class="fas fa-university"></i> Bank Transfer
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="paymentMethod" id="other" value="Other">
+                        <label class="btn btn-outline-primary" for="other">
+                            <i class="fas fa-ellipsis-h"></i> Other
+                        </label> *@
+                    </div>
+                </div>
+
+                <div id="gcashDetails" class="payment-details mb-3 p-3 border rounded bg-light d-none">
+                    <div class="mb-2">
+                        <strong><i class="fas fa-mobile-alt me-2"></i>GCash Payment Details</strong>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-2">
+                                <label for="gcashRefNumber" class="form-label">Reference Number</label>
+                                <input type="text" id="gcashRefNumber" class="form-control ref-number" placeholder="e.g., GC123456789">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-2">
+                                <label for="gcashSenderName" class="form-label">Sender Name</label>
+                                <input type="text" id="gcashSenderName" class="form-control" placeholder="e.g., Juan Dela Cruz">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="bankDetails" class="payment-details mb-3 p-3 border rounded bg-light d-none">
+                    <div class="mb-2">
+                        <strong><i class="fas fa-university me-2"></i>Bank Transfer Details</strong>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-2">
+                                <label for="bankRefNumber" class="form-label">Transaction/Reference Number</label>
+                                <input type="text" id="bankRefNumber" class="form-control ref-number" placeholder="e.g., BTR987654321">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-2">
+                                <label for="bankName" class="form-label">Bank Name</label>
+                                <input type="text" id="bankName" class="form-control" placeholder="e.g., BDO, BPI, Metrobank">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="cashDetails" class="payment-details mb-3 p-3 border rounded bg-light">
+                    <div class="mb-2">
+                        <strong><i class="fas fa-money-bill-wave me-2"></i>Cash Payment Details</strong>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="cashReceivedBy" class="form-label">Received By</label>
+                        <input type="text" id="cashReceivedBy" class="form-control ref-number" placeholder="e.g., Maria Santos">
+                    </div>
+                </div>
+
+                <div id="otherDetails" class="payment-details mb-3 p-3 border rounded bg-light d-none">
+                    <div class="mb-2">
+                        <strong><i class="fas fa-ellipsis-h me-2"></i>Other Payment Method Details</strong>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="otherMethodDesc" class="form-label">Payment Method Description</label>
+                        <input type="text" id="otherMethodDesc" class="form-control" placeholder="e.g., Check, Money Order, etc.">
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="otherRefNumber" class="form-label">Reference Number</label>
+                        <input type="text" id="otherRefNumber" class="form-control ref-number" placeholder="e.g., CHK12345">
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="paymentReference" class="form-label">Payment Reference (will be auto-filled)</label>
+                    <input type="text" id="paymentReference" name="paymentReference" class="form-control" readonly />
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="notes" class="form-label">Additional Notes</label>
+                    <textarea id="notes" name="notes" class="form-control" rows="2" placeholder="Any additional payment information..."></textarea>
+                </div>
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Record Payment
+                    </button>
+                    <a asp-action="BillDetails" asp-route-id="@Model.BillId" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Bill Details
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Payment method selection
+            $('input[name="paymentMethod"]').change(function() {
+                // Hide all payment details sections
+                $('.payment-details').addClass('d-none');
+                
+                // Show the selected payment method details
+                const selectedMethod = $(this).val();
+                switch(selectedMethod) {
+                    case 'Cash':
+                        $('#cashDetails').removeClass('d-none');
+                        break;
+                    case 'GCash':
+                        $('#gcashDetails').removeClass('d-none');
+                        break;
+                    case 'Bank Transfer':
+                        $('#bankDetails').removeClass('d-none');
+                        break;
+                    case 'Other':
+                        $('#otherDetails').removeClass('d-none');
+                        break;
+                }
+                
+                updatePaymentReference();
+            });
+            
+            // Update reference field when inputs change
+            $('#gcashRefNumber, #gcashSenderName, #bankRefNumber, #bankName, #cashReceivedBy, #otherMethodDesc, #otherRefNumber').on('input', function() {
+                updatePaymentReference();
+            });
+            
+            // Initial update
+            updatePaymentReference();
+            
+            function updatePaymentReference() {
+                const selectedMethod = $('input[name="paymentMethod"]:checked').val();
+                let reference = '';
+                
+                switch(selectedMethod) {
+                    case 'Cash':
+                        const receivedBy = $('#cashReceivedBy').val();
+                        reference = `Cash payment${receivedBy ? ' received by ' + receivedBy : ''}`;
+                        break;
+                    case 'GCash':
+                        const gcashRef = $('#gcashRefNumber').val();
+                        const senderName = $('#gcashSenderName').val();
+                        reference = `GCash${gcashRef ? ' #' + gcashRef : ''}${senderName ? ' from ' + senderName : ''}`;
+                        break;
+                    case 'Bank Transfer':
+                        const bankRef = $('#bankRefNumber').val();
+                        const bankName = $('#bankName').val();
+                        reference = `${bankName || 'Bank'} Transfer${bankRef ? ' #' + bankRef : ''}`;
+                        break;
+                    case 'Other':
+                        const methodDesc = $('#otherMethodDesc').val();
+                        const otherRef = $('#otherRefNumber').val();
+                        reference = `${methodDesc || 'Other'}${otherRef ? ' #' + otherRef : ''}`;
+                        break;
+                }
+                
+                $('#paymentReference').val(reference);
+            }
+        });
+    </script>
+}
+
+@functions {
+    string GetStatusClass(BoardPaySystem.Models.BillStatus status)
+    {
+        return status switch
+        {
+            BoardPaySystem.Models.BillStatus.Paid => "success",
+            BoardPaySystem.Models.BillStatus.Pending => "warning",
+            BoardPaySystem.Models.BillStatus.Overdue => "danger",
+            _ => "secondary"
+        };
+    }
+}

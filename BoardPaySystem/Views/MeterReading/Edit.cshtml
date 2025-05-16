@@ -1,0 +1,118 @@
+@model BoardPaySystem.Models.MeterReading
+@{
+    ViewData["Title"] = "Edit Meter Reading";
+    Layout = "_LandlordLayout";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Meter Readings</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.ReadingId">Reading Details</a></li>
+                    <li class="breadcrumb-item active">Edit Reading</li>
+                </ol>
+            </nav>
+            <h1><i class="fas fa-edit"></i> Edit Meter Reading</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Edit Reading Information</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" asp-route-id="@Model.ReadingId" method="post">
+                        @Html.AntiForgeryToken()
+                        
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">Tenant:</div>
+                            <div class="col-md-8">@Model.Tenant.FirstName @Model.Tenant.LastName</div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">Room:</div>
+                            <div class="col-md-8">@Model.Room.Floor.Building.BuildingName - Room @Model.Room.RoomNumber</div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="readingDate" class="form-label required">Reading Date</label>
+                            <input type="date" id="readingDate" name="readingDate" class="form-control" 
+                                   value="@Model.ReadingDate.ToString("yyyy-MM-dd")" 
+                                   max="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="currentReading" class="form-label required">Current Reading (kWh)</label>
+                            <input type="number" id="currentReading" name="currentReading" class="form-control" 
+                                   step="0.01" min="0.01" value="@Model.CurrentReading" required />
+                            <small class="form-text text-muted">
+                                Enter the current meter reading in kilowatt-hours (kWh). This should be the total reading shown on the electric meter.
+                            </small>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea id="notes" name="notes" class="form-control" rows="3" 
+                                      placeholder="Optional notes about this reading">@Model.Notes</textarea>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <a asp-action="Details" asp-route-id="@Model.ReadingId" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Important Notice</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>When editing meter readings:</strong></p>
+                    <ul>
+                        <li>Ensure the reading value is accurate and matches what appears on the physical meter.</li>
+                        <li>If this reading has already been used to generate a bill, changing it will not automatically update the bill.</li>
+                        <li>Consider adding a note explaining why the reading was edited.</li>
+                    </ul>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> <strong>Previous Reading:</strong> 
+                        @(Model.PreviousReading?.ToString() ?? "N/A") @(Model.PreviousReading.HasValue ? "kWh" : "")
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Set maximum date for the date picker to today
+            const today = new Date().toISOString().split('T')[0];
+            $('#readingDate').attr('max', today);
+            
+            // Add validation
+            $('form').on('submit', function(e) {
+                if ($('#currentReading').val() <= 0) {
+                    alert('Reading value must be greater than zero');
+                    e.preventDefault();
+                    return false;
+                }
+                
+                return true;
+            });
+        });
+    </script>
+}

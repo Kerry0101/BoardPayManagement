@@ -1,0 +1,101 @@
+﻿@{
+    Layout = "_TenantLayout";
+    ViewData["Title"] = "My Bills";
+    var billReadings = ViewBag.BillReadings as Dictionary<int, BoardPaySystem.Models.MeterReading>;
+}
+
+@model IEnumerable<BoardPaySystem.Models.Bill>
+
+<div class="content-section active">
+    <h3><i class="fas fa-file-invoice"></i> My Bills</h3>
+    <p>Your billing statement.</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Billing Month</th>
+                <th>Rent</th>
+                <th>Water</th>
+                <th>WiFi</th>
+                <th>Electricity</th>
+                <th>Total Bill</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var bill in Model.OrderByDescending(b => b.BillingDate))
+            {
+                var isPaid = bill.Status == BoardPaySystem.Models.BillStatus.Paid;
+                var isPending = bill.Status == BoardPaySystem.Models.BillStatus.Pending;
+                var isOverdue = bill.Status == BoardPaySystem.Models.BillStatus.Overdue;
+                var isWrittenOff = bill.Status == BoardPaySystem.Models.BillStatus.WrittenOff;
+                <tr>
+                    <td>@bill.BillingDate.ToString("MMM yyyy")</td>
+                    <td>₱@bill.MonthlyRent.ToString("N0")</td>
+                    <td>₱@bill.WaterFee.ToString("N0")</td>
+                    <td>₱@bill.WifiFee.ToString("N0")</td>
+                    <td>
+                        ₱@bill.ElectricityFee.ToString("N2")
+                        @if (billReadings != null && billReadings.TryGetValue(bill.BillId, out var reading))
+                        {
+                            <text> (@reading.UsageKwh.ToString("N2") kWh)</text>
+                        }
+                    </td>
+                    <td><b>₱@bill.TotalAmount.ToString("N2")</b></td>
+                    <td>@bill.DueDate.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        @if (isPaid)
+                        {
+                            <span class="status status-paid">Paid</span>
+                        }
+                        else if (isPending)
+                        {
+                            <span class="status status-pending">Pending</span>
+                        }
+                        else if (isOverdue)
+                        {
+                            <span class="status status-overdue">Overdue</span>
+                        }
+                        else if (isWrittenOff)
+                        {
+                            <span class="status status-writtenoff">Written Off</span>
+                        }
+                        else
+                        {
+                            <span class="status status-pending">Not Paid</span>
+                        }
+                    </td>
+                    <td class="action-cell">
+                        <div class="action-btn">
+                        @if (!isPaid)
+                        {
+                            <a asp-action="Payment" asp-controller="Tenant" asp-route-id="@bill.BillId" class="btn-primary btn-small">Pay Now</a>
+                        }
+                        else
+                        {
+                            <a asp-action="BillDetails" asp-controller="Tenant" asp-route-id="@bill.BillId" class="btn-secondary btn-small">View Details</a>
+                        }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#currentBillsTable').DataTable({
+                "order": [[2, "asc"]],
+                "pageLength": 10
+            });
+            
+            $('#paidBillsTable').DataTable({
+                "order": [[2, "desc"]],
+                "pageLength": 5
+            });
+        });
+    </script>
+}

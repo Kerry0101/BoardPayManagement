@@ -1,0 +1,40 @@
+﻿@{
+    ViewData["Title"] = "Reports";
+    Layout = "_LandlordLayout";
+}
+
+<h3><i class="fas fa-chart-line"></i> Reports</h3>
+
+<div class="form-group report-select">
+    <label for="report-type">Select Report:</label>
+    <select id="report-type" class="form-control">
+        <option value="income_monthly">Monthly Income Summary</option>
+        <option value="income_yearly">Yearly Income Summary</option>
+        <option value="unpaid_tenants">Unpaid Tenants List</option>
+        <option value="payment_history">Payment History</option>
+        <option value="fee_history">Fee Change History</option>
+        <option value="elec_trends">Electricity Usage Trends</option>
+    </select>
+</div>
+
+<div class="form-grid">
+    <div class="form-group">
+        <label for="report-building">Filter by Building:</label>
+        <select id="report-building">
+            <option value="all">All Buildings</option>
+            <option value="Sunshine Apartments">Sunshine Apartments</option>
+            <option value="Moonlight Dorm">Moonlight Dorm</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="report-period">Period:</label>
+        <input type="month" id="report-period" value="2023-11">
+    </div>
+    <div class="form-group" style="align-self: end;">
+        <button type="button" class="btn-primary">Generate Report</button>
+    </div>
+</div>
+
+<div class="mt-30" style="border: 1px dashed #ccc; padding: 20px; min-height: 200px; text-align: center; color: #888;">
+    Report data will appear here.
+</div>

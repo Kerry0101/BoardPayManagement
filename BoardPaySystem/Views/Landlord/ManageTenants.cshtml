@@ -1,0 +1,423 @@
+﻿@model IEnumerable<BoardPaySystem.Models.ApplicationUser>
+@{
+    ViewData["Title"] = "Manage Tenants";
+    Layout = "_LandlordLayout";
+}
+
+<div class="content-section">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="page-title mb-0">
+            <i class="fas fa-users"></i>
+            Manage Tenants
+        </h3>
+        <a asp-action="AddTenant" class="btn btn-success">
+            <i class="fas fa-user-plus"></i> Add New Tenant
+        </a>
+    </div>
+
+    @if (ViewBag.MissingReadings != null && ViewBag.MissingReadings.Count > 0)
+    {
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            The following rooms/tenants are missing meter readings for this month:
+            <ul>
+            @foreach (var item in ViewBag.MissingReadings)
+            {
+                <li>@item.TenantName (@item.RoomNumber)</li>
+            }
+            </ul>
+        </div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Info"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle me-2"></i> @TempData["Info"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" id="tenant-building-filter-form">
+                <div class="mb-3">
+                    <label for="filter-tenant-building" class="form-label">Filter by Building:</label>
+                    <select id="filter-tenant-building" name="buildingId" class="form-select" style="max-width: 300px;" onchange="document.getElementById('tenant-building-filter-form').submit()">
+                        <option value="">All Buildings</option>
+                        @foreach (var building in ViewBag.Buildings ?? new List<dynamic>())
+                        {
+                            if (ViewBag.CurrentBuildingId != null && building.BuildingId == (int)ViewBag.CurrentBuildingId)
+                            {
+                                <option value="@building.BuildingId" selected>@building.BuildingName</option>
+                            }
+                            else
+                            {
+                                <option value="@building.BuildingId">@building.BuildingName</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </form>
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No tenants have been added yet. Click the "Add New Tenant" button to add your first tenant.
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-users"></i> Current Tenants</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Building</th>
+                            <th>Room</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tenant in Model)
+                        {
+                            <tr data-building-id="@(tenant.CurrentRoom?.Floor?.Building?.BuildingId ?? 0)">
+                                <td>@tenant.FirstName @tenant.LastName</td>
+                                <td>@tenant.PhoneNumber</td>
+                                <td>@(tenant.CurrentRoom?.Floor?.Building?.BuildingName ?? "Not Assigned")</td>
+                                <td>@(tenant.CurrentRoom?.RoomNumber ?? "Not Assigned")</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="TenantDetails" asp-route-id="@tenant.Id" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-info-circle"></i> Details
+                                        </a>
+                                        <a class="btn btn-info btn-sm" href="/MeterReading/TenantHistory/@tenant.Id">
+                                            <i class="fas fa-history"></i> Meter History
+                                        </a>
+                                        <button type="button" class="btn btn-warning btn-sm" onclick="confirmArchive('@tenant.Id', '@tenant.FirstName @tenant.LastName')">
+                                            <i class="fas fa-archive"></i> Archive
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirm Tenant Deletion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Warning: This action cannot be undone!
+                </div>
+                <p>Are you sure you want to delete the tenant "<span id="tenantName" class="fw-bold"></span>"?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash me-1"></i>
+                    Delete Tenant
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Archive Confirmation Modal -->
+<div class="modal fade" id="archiveConfirmModal" tabindex="-1" aria-labelledby="archiveConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="archiveConfirmModalLabel">
+                    <i class="fas fa-archive me-2"></i>
+                    Confirm Tenant Archive
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="archiveUnpaidWarning" style="display:none;"></div>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Archiving will keep the tenant's data for future reference. You can restore or permanently delete archived tenants later.
+                </div>
+                <p>Are you sure you want to archive the tenant "<span id="archiveTenantName" class="fw-bold"></span>"?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="writeOffBtn" style="display:none;">
+                    <i class="fas fa-eraser me-1"></i>
+                    Write Off & Archive
+                </button>
+                <button type="button" class="btn btn-warning" id="confirmArchiveBtn">
+                    <i class="fas fa-archive me-1"></i>
+                    Archive Tenant
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let activeModal = null;
+        let tenantToDelete = null;
+
+        // Function to force cleanup all modal-related elements and styles
+        function forceCleanupModals() {
+            // Remove all modal backdrops first
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => {
+                backdrop.classList.remove('show');
+                backdrop.remove();
+            });
+
+            // Clean up body
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+
+            // Reset all modals
+            document.querySelectorAll('.modal').forEach(modal => {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.dispose();
+                }
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+                modal.removeAttribute('aria-modal');
+                modal.removeAttribute('role');
+            });
+
+            // Force remove any remaining backdrop
+            const remainingBackdrops = document.querySelectorAll('.modal-backdrop');
+            remainingBackdrops.forEach(backdrop => backdrop.remove());
+
+            // Reset active modal
+            activeModal = null;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial cleanup
+            forceCleanupModals();
+
+            // Initialize delete confirmation modal
+            const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+            if (deleteConfirmModal) {
+                const modal = new bootstrap.Modal(deleteConfirmModal, {
+                    backdrop: false
+                });
+
+                // Handle modal events
+                deleteConfirmModal.addEventListener('hidden.bs.modal', forceCleanupModals);
+                deleteConfirmModal.addEventListener('show.bs.modal', function() {
+                    if (activeModal) {
+                        activeModal.hide();
+                        forceCleanupModals();
+                    }
+                    activeModal = modal;
+                });
+            }
+
+            // Handle clicks outside modals
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    forceCleanupModals();
+                }
+            });
+
+            // Handle escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    forceCleanupModals();
+                }
+            });
+
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+            
+            // Filtering functionality for buildings
+            $('#filter-tenant-building').on('change', function() {
+                const selectedBuildingId = $(this).val();
+                
+                if (selectedBuildingId === 'all') {
+                    $('tr[data-building-id]').show();
+                } else {
+                    $('tr[data-building-id]').hide();
+                    $(`tr[data-building-id="${selectedBuildingId}"]`).show();
+                }
+            });
+        });
+
+        function showModal(modalId) {
+            forceCleanupModals();
+            const modalElement = document.getElementById(modalId);
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: false
+            });
+            modal.show();
+            activeModal = modal;
+        }
+
+        function confirmDelete(tenantId, tenantName) {
+            tenantToDelete = tenantId;
+            document.getElementById('tenantName').textContent = tenantName;
+            showModal('deleteConfirmModal');
+        }
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+            if (!tenantToDelete) return;
+
+            const deleteBtn = this;
+            deleteBtn.disabled = true;
+            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+
+            fetch(`/Landlord/DeleteTenant/${tenantToDelete}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                forceCleanupModals();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    const errorMessage = data.message || 'An unexpected error occurred. Please try again.';
+                    alert(errorMessage);
+                    deleteBtn.disabled = false;
+                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Tenant';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                forceCleanupModals();
+                alert('An error occurred while deleting the tenant. Please try again.');
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Tenant';
+            });
+        });
+
+        function confirmArchive(tenantId, tenantName) {
+            document.getElementById('archiveTenantName').textContent = tenantName;
+            const warningDiv = document.getElementById('archiveUnpaidWarning');
+            const writeOffBtn = document.getElementById('writeOffBtn');
+            const archiveBtn = document.getElementById('confirmArchiveBtn');
+            warningDiv.style.display = 'none';
+            writeOffBtn.style.display = 'none';
+            // Reset archive button state and handler
+            archiveBtn.onclick = null;
+            archiveBtn.disabled = false;
+            archiveBtn.innerHTML = '<i class="fas fa-archive me-1"></i> Archive Tenant';
+
+            // Check for unpaid bills
+            fetch(`/Landlord/CheckUnpaidBills?tenantId=${tenantId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.hasUnpaid) {
+                        warningDiv.innerHTML = `<div class='alert alert-danger'><b>Warning:</b> This tenant has ₱${data.total.toLocaleString()} in unpaid bills for: <ul>${data.periods.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
+                        warningDiv.style.display = 'block';
+                        writeOffBtn.style.display = 'inline-block';
+                        archiveBtn.disabled = true;
+                        writeOffBtn.onclick = function() {
+                            writeOffBtn.disabled = true;
+                            writeOffBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Writing Off...';
+                            const token = $('input[name="__RequestVerificationToken"]').val();
+                            const formData = new URLSearchParams();
+                            formData.append('id', tenantId);
+                            formData.append('__RequestVerificationToken', token);
+                            fetch('/Landlord/WriteOffTenantBills', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                body: formData
+                            })
+                            .then(r => r.json())
+                            .then(result => {
+                                if (result.success) {
+                                    writeOffBtn.style.display = 'none';
+                                    archiveBtn.disabled = false;
+                                    warningDiv.innerHTML = `<div class='alert alert-success'>All unpaid bills have been written off. You can now archive the tenant.</div>`;
+                                } else {
+                                    writeOffBtn.disabled = false;
+                                    writeOffBtn.innerHTML = '<i class="fas fa-eraser me-1"></i> Write Off & Archive';
+                                    warningDiv.innerHTML += `<div class='alert alert-danger mt-2'>${result.message}</div>`;
+                                }
+                            });
+                        };
+                    }
+                });
+            document.getElementById('confirmArchiveBtn').onclick = function() {
+                archiveTenant(tenantId);
+            };
+            showModal('archiveConfirmModal');
+        }
+
+        function archiveTenant(tenantId) {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            const formData = new URLSearchParams();
+            formData.append('id', tenantId);
+            formData.append('__RequestVerificationToken', token);
+
+            fetch('/Landlord/ArchiveTenant', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const archiveBtn = document.getElementById('confirmArchiveBtn');
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to archive tenant.');
+                    archiveBtn.disabled = false;
+                    archiveBtn.innerHTML = '<i class="fas fa-archive me-1"></i> Archive Tenant';
+                    archiveBtn.onclick = null;
+                }
+            })
+            .catch(error => {
+                const archiveBtn = document.getElementById('confirmArchiveBtn');
+                alert('An error occurred while archiving the tenant. Please try again.');
+                archiveBtn.disabled = false;
+                archiveBtn.innerHTML = '<i class="fas fa-archive me-1"></i> Archive Tenant';
+                archiveBtn.onclick = null;
+            });
+        }
+    </script>
+}

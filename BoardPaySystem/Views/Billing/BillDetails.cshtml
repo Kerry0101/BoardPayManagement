@@ -1,0 +1,529 @@
+@model BoardPaySystem.Models.Bill
+@{
+    ViewData["Title"] = "Bill Details";
+    Layout = "_LandlordLayout";
+    var payments = ViewBag.Payments as List<BoardPaySystem.Models.Payment> ?? new List<BoardPaySystem.Models.Payment>();
+    decimal totalPaid = payments.Sum(p => p.Amount);
+    
+    // Handle overdue calculations
+    bool isOverdue = ViewBag.IsOverdue != null && ViewBag.IsOverdue;
+    bool isPastDueDate = ViewBag.IsPastDueDate != null && ViewBag.IsPastDueDate;
+    int daysOverdue = ViewBag.DaysOverdue != null ? (int)ViewBag.DaysOverdue : 0;
+    decimal remainingBalance = isOverdue && ViewBag.AdjustedTotal != null 
+        ? (decimal)ViewBag.AdjustedTotal - totalPaid 
+        : Model.TotalAmount - totalPaid;
+}
+
+<!-- Hidden anti-forgery token for JS -->
+<form id="af-form" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
+<div class="content-section">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="page-title mb-0">
+            <i class="fas fa-file-invoice"></i>
+            Bill Details
+        </h3>
+        <div>
+            <a asp-controller="Landlord" asp-action="Billing" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Billing
+            </a>
+            @if (!Model.IsApproved)
+            {
+                <form asp-action="ApproveBill" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="billId" value="@Model.BillId" />
+                    <button type="submit" class="btn btn-success ms-2">
+                        <i class="fas fa-check"></i> Approves Bill
+                    </button>
+                </form>
+            }
+            <a asp-action="RecordPayment" asp-route-id="@Model.BillId" class="btn btn-primary ms-2">
+                <i class="fas fa-money-bill-wave"></i> Record Payment
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (isPastDueDate && Model.Status != BoardPaySystem.Models.BillStatus.Overdue)
+    {
+        <div class="alert alert-warning mb-4">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-circle fa-2x me-3"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h5 class="alert-heading">Bill is @daysOverdue days past due!</h5>
+                    <p class="mb-0">This bill is past due and will be automatically marked as overdue by the system.</p>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (isOverdue)
+    {
+        <div class="alert alert-danger mb-4">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-circle fa-2x me-3"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h5 class="alert-heading">Overdue Bill - @daysOverdue days late</h5>
+                    <p class="mb-0">This bill is overdue and a late payment fee of <strong>@ViewBag.LateFeePercentage%</strong> has been applied to all charges.</p>
+                    <hr class="my-2">
+                    <div class="row">
+                        <div class="col-md-7">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tr>
+                                        <td>Original Bill Amount:</td>
+                                        <td class="text-end">@Model.TotalAmount.ToString("C")</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Late Fee (@ViewBag.LateFeePercentage% of @Model.TotalAmount.ToString("C")):</td>
+                                        <td class="text-end">+ @(((decimal)ViewBag.TotalLateFee).ToString("C"))</td>
+                                    </tr>
+                                    <tr class="fw-bold">
+                                        <td>New Total Amount Due:</td>
+                                        <td class="text-end">@(((decimal)ViewBag.AdjustedTotal).ToString("C"))</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Bill Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Tenant:</strong> @(Model.Tenant?.FirstName) @(Model.Tenant?.LastName)</p>
+                            <p><strong>Room:</strong> @(Model.Room?.RoomNumber)</p>
+                            <p><strong>Billing Date:</strong> @(Model.BillingDate.ToString("MMMM d, yyyy"))</p>
+                            <p><strong>Due Date:</strong> @(Model.DueDate.ToString("MMMM d, yyyy"))</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p>
+                                <strong>Status:</strong> 
+                                <span class="badge bg-@GetStatusClass(Model.Status)">@Model.Status</span>
+                                @if (isOverdue)
+                                {
+                                    <span class="badge bg-danger ms-2">
+                                        <i class="fas fa-calendar-times me-1"></i>
+                                        Past Due
+                                    </span>
+                                }
+                            </p>
+                            <p>
+                                <strong>Total Amount:</strong> 
+                                @if (isOverdue && ViewBag.AdjustedTotal != null)
+                                {
+                                    <span class="text-decoration-line-through text-muted me-2">@(Model.TotalAmount.ToString("C"))</span>
+                                    <span class="text-danger fw-bold">@(((decimal)ViewBag.AdjustedTotal).ToString("C"))</span>
+                                }
+                                else
+                                {
+                                    <span>@(Model.TotalAmount.ToString("C"))</span>
+                                }
+                            </p>
+                            <p><strong>Amount Paid:</strong> @(totalPaid.ToString("C"))</p>
+                            <p>
+                                <strong>Remaining Balance:</strong> 
+                                <span class="@(isOverdue ? "text-danger fw-bold" : "")">@(remainingBalance.ToString("C"))</span>
+                            </p>
+                        </div>
+                    </div>
+                    <hr />
+                    <h6 class="fw-bold">Charges Breakdown</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td>Monthly Rent</td>
+                                    <td class="text-end">
+                                        @if (isOverdue && ViewBag.AdjustedRent != null)
+                                        {
+                                            <span class="text-decoration-line-through text-muted me-2">@Model.MonthlyRent.ToString("C")</span>
+                                            <span class="text-danger">@(((decimal)ViewBag.AdjustedRent).ToString("C"))</span>
+                                        }
+                                        else
+                                        {
+                                            @Model.MonthlyRent.ToString("C")
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Water Fee</td>
+                                    <td class="text-end">
+                                        @if (isOverdue && ViewBag.AdjustedWaterFee != null)
+                                        {
+                                            <span class="text-decoration-line-through text-muted me-2">@Model.WaterFee.ToString("C")</span>
+                                            <span class="text-danger">@(((decimal)ViewBag.AdjustedWaterFee).ToString("C"))</span>
+                                        }
+                                        else
+                                        {
+                                            @Model.WaterFee.ToString("C")
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Electricity Fee</td>
+                                    <td class="text-end">
+                                        @if (isOverdue && ViewBag.AdjustedElectricityFee != null)
+                                        {
+                                            <span class="text-decoration-line-through text-muted me-2">@Model.ElectricityFee.ToString("C")</span>
+                                            <span class="text-danger">@(((decimal)ViewBag.AdjustedElectricityFee).ToString("C"))</span>
+                                        }
+                                        else
+                                        {
+                                            @Model.ElectricityFee.ToString("C")
+                                        }
+                                        @if (Model.ElectricityFee == 0)
+                                        {
+                                            <button class="btn btn-warning btn-sm ms-2 link-meter-btn" data-bill-id="@Model.BillId">
+                                                <i class="fas fa-bolt"></i> Link Meter Reading
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>WiFi Fee</td>
+                                    <td class="text-end">
+                                        @if (isOverdue && ViewBag.AdjustedWifiFee != null)
+                                        {
+                                            <span class="text-decoration-line-through text-muted me-2">@Model.WifiFee.ToString("C")</span>
+                                            <span class="text-danger">@(((decimal)ViewBag.AdjustedWifiFee).ToString("C"))</span>
+                                        }
+                                        else
+                                        {
+                                            @Model.WifiFee.ToString("C")
+                                        }
+                                    </td>
+                                </tr>
+                                @if (isOverdue && ViewBag.TotalLateFee != null && (decimal)ViewBag.TotalLateFee > 0)
+                                {
+                                    <tr class="table-danger">
+                                        <td>
+                                            <strong>Late Fee (@ViewBag.LateFeePercentage%)</strong>
+                                            <small class="d-block text-muted">Applied to all charges</small>
+                                        </td>
+                                        <td class="text-end text-danger fw-bold">@(((decimal)ViewBag.TotalLateFee).ToString("C"))</td>
+                                    </tr>
+                                }
+                                else if (Model.LateFee.HasValue && Model.LateFee.Value > 0)
+                                {
+                                    <tr>
+                                        <td>Late Fee</td>
+                                        <td class="text-end">@Model.LateFee.Value.ToString("C")</td>
+                                    </tr>
+                                }
+                                @if (Model.OtherFees.HasValue && Model.OtherFees.Value > 0)
+                                {
+                                    <tr>
+                                        <td>Other Fees @(!string.IsNullOrEmpty(Model.OtherFeesDescription) ? $"({Model.OtherFeesDescription})" : "")</td>
+                                        <td class="text-end">@Model.OtherFees.Value.ToString("C")</td>
+                                    </tr>
+                                }
+                                <tr class="fw-bold @(isOverdue ? "table-danger" : "")">
+                                    <td>Total</td>
+                                    <td class="text-end @(isOverdue ? "text-danger" : "")">
+                                        @if (isOverdue && ViewBag.AdjustedTotal != null)
+                                        {
+                                            <span class="text-decoration-line-through text-muted me-2">@Model.TotalAmount.ToString("C")</span>
+                                            <span>@(((decimal)ViewBag.AdjustedTotal).ToString("C"))</span>
+                                        }
+                                        else
+                                        {
+                                            @Model.TotalAmount.ToString("C")
+                                        }
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Payment History</h5>
+                </div>
+                <div class="card-body">
+                    @if (payments.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Reference</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var payment in payments)
+                                    {
+                                        <tr>
+                                            <td>@payment.PaymentDate.ToString("MM/dd/yyyy")</td>
+                                            <td>@payment.Amount.ToString("C")</td>
+                                            <td>@payment.ReferenceNumber</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr class="fw-bold">
+                                        <td>Total</td>
+                                        <td colspan="2">@totalPaid.ToString("C")</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> No payments recorded yet.
+                        </div>
+                    }
+                </div>
+            </div>
+            
+            @if (Model.Notes != null)
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Notes</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>@Model.Notes</p>
+                    </div>
+                </div>
+            }
+            
+            @if (isOverdue || isPastDueDate)
+            {
+                <div class="card mb-4 border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Late Payment Calculation (@daysOverdue days overdue)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="fw-bold mb-3">A late fee of @ViewBag.LateFeePercentage% has been applied:</p>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Item</th>
+                                        <th class="text-end">Original</th>
+                                        <th class="text-end">Late Fee</th>
+                                        <th class="text-end">After Late Fee</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Rent</td>
+                                        <td class="text-end">@Model.MonthlyRent.ToString("C")</td>
+                                        <td class="text-end">@((((decimal)ViewBag.AdjustedRent - Model.MonthlyRent)).ToString("C"))</td>
+                                        <td class="text-end text-danger">@(((decimal)ViewBag.AdjustedRent).ToString("C"))</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Water</td>
+                                        <td class="text-end">@Model.WaterFee.ToString("C")</td>
+                                        <td class="text-end">@((((decimal)ViewBag.AdjustedWaterFee - Model.WaterFee)).ToString("C"))</td>
+                                        <td class="text-end text-danger">@(((decimal)ViewBag.AdjustedWaterFee).ToString("C"))</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Electricity</td>
+                                        <td class="text-end">@Model.ElectricityFee.ToString("C")</td>
+                                        <td class="text-end">@((((decimal)ViewBag.AdjustedElectricityFee - Model.ElectricityFee)).ToString("C"))</td>
+                                        <td class="text-end text-danger">@(((decimal)ViewBag.AdjustedElectricityFee).ToString("C"))</td>
+                                    </tr>
+                                    <tr>
+                                        <td>WiFi</td>
+                                        <td class="text-end">@Model.WifiFee.ToString("C")</td>
+                                        <td class="text-end">@((((decimal)ViewBag.AdjustedWifiFee - Model.WifiFee)).ToString("C"))</td>
+                                        <td class="text-end text-danger">@(((decimal)ViewBag.AdjustedWifiFee).ToString("C"))</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="table-danger">
+                                    <tr class="fw-bold">
+                                        <td>Total</td>
+                                        <td class="text-end">@Model.TotalAmount.ToString("C")</td>
+                                        <td class="text-end">@(((decimal)ViewBag.TotalLateFee).ToString("C"))</td>
+                                        <td class="text-end text-danger">@(((decimal)ViewBag.AdjustedTotal).ToString("C"))</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        
+                        <div class="alert alert-warning mt-3 mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Please inform the tenant that the total amount due has increased to <strong>@(((decimal)ViewBag.AdjustedTotal).ToString("C"))</strong> due to late payment.
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal for linking meter reading -->
+<div class="modal fade" id="linkMeterModal" tabindex="-1" aria-labelledby="linkMeterModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="linkMeterModalLabel">Select Meter Reading</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-sm" id="meter-readings-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Reading</th>
+              <th>Usage</th>
+              <th>Charge</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+        <div id="no-readings-msg" class="text-danger" style="display:none;">No available meter readings for this period.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+    <script>
+    console.log('Script loaded!');
+    $(function() {
+        var antiForgeryToken = $('#af-form input[name=__RequestVerificationToken]').val();
+        $('.link-meter-btn').on('click', function() {
+            console.log('Link Meter Reading button clicked!');
+            var billId = $(this).data('bill-id');
+            $.get('/Billing/GetAvailableMeterReadings', { billId: billId }, function(readings) {
+                console.log('Readings response:', readings);
+                var tbody = $('#meter-readings-table tbody');
+                tbody.empty();
+                if (readings.length === 0) {
+                    $('#no-readings-msg').show();
+                } else {
+                    $('#no-readings-msg').hide();
+                    readings.forEach(function(r) {
+                        var row = `<tr>
+                            <td>${new Date(r.readingDate).toLocaleDateString()}</td>
+                            <td>${r.currentReading}</td>
+                            <td>${r.usageKwh}</td>
+                            <td>${r.totalCharge}</td>
+                            <td>
+                                <form class='link-meter-form' method='post'>
+                                    <input type='hidden' name='billId' value='${billId}' />
+                                    <input type='hidden' name='readingId' value='${r.readingId}' />
+                                    <input type='hidden' name='__RequestVerificationToken' value='${antiForgeryToken}' />
+                                    <button type='submit' class='btn btn-sm btn-success'>Select</button>
+                                </form>
+                            </td>
+                        </tr>`;
+                        tbody.append(row);
+                    });
+                }
+                var modal = new bootstrap.Modal(document.getElementById('linkMeterModal'), {
+                    backdrop: false,
+                    keyboard: true
+                });
+                modal.show();
+                $('.link-meter-form').on('submit', function(e) {
+                    e.preventDefault();
+                    var form = $(this);
+                    $.post('/Billing/LinkMeterReading', form.serialize(), function(resp) {
+                        if (resp.success) {
+                            alert(resp.message);
+                            var modalInstance = bootstrap.Modal.getInstance(document.getElementById('linkMeterModal'));
+                            if (modalInstance) modalInstance.hide();
+                            location.reload();
+                        } else {
+                            alert(resp.message);
+                        }
+                    });
+                });
+            });
+        });
+
+        // Improved modal cleanup logic (like ManageBuildings)
+        function forceCleanupModals() {
+            // Remove all modal backdrops
+            $('.modal-backdrop').remove();
+            // Clean up body
+            $('body').removeClass('modal-open').css({ overflow: '', paddingRight: '' });
+            // Hide and reset all modals
+            $('.modal').each(function() {
+                const bsModal = bootstrap.Modal.getInstance(this);
+                if (bsModal) {
+                    bsModal.dispose();
+                }
+                $(this).removeClass('show').hide().attr('aria-hidden', 'true').removeAttr('aria-modal').removeAttr('role');
+            });
+        }
+        // Attach cleanup to modal events
+        $('#linkMeterModal').on('hidden.bs.modal', forceCleanupModals);
+        // Click outside modal
+        $(document).on('click', function(e) {
+            if ($(e.target).hasClass('modal')) {
+                forceCleanupModals();
+            }
+        });
+        // Escape key
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape') {
+                forceCleanupModals();
+            }
+        });
+    });
+    </script>
+}
+
+@functions {
+    string GetStatusClass(BoardPaySystem.Models.BillStatus status)
+    {
+        return status switch
+        {
+            BoardPaySystem.Models.BillStatus.Paid => "success",
+            BoardPaySystem.Models.BillStatus.Pending => "warning",
+            BoardPaySystem.Models.BillStatus.Overdue => "danger",
+            BoardPaySystem.Models.BillStatus.Cancelled => "secondary",
+            _ => "secondary"
+        };
+    }
+}

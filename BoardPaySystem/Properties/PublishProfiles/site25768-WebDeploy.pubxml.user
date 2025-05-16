@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+This file is used by the publish/package process of your Web project. You can customize the behavior of this process
+by editing this MSBuild file. In order to learn more about this please visit https://go.microsoft.com/fwlink/?LinkID=208121. 
+-->
+<Project>
+  <PropertyGroup>
+    <TimeStampOfAssociatedLegacyPublishXmlFile />
+    <EncryptedPassword>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAA7xckDa/8xECKqG5xfXYvnQAAAAACAAAAAAAQZgAAAAEAACAAAABjUQ5HzjW1VFGYX3FaEhjHT07wC6zoJ9FlRJRr20rfzwAAAAAOgAAAAAIAACAAAABcaDM8JFFD9rTFwUW1590SKCua+awvIeuvJ284hqX4IiAAAACwElOHgOHw/Gj7Tmbhtqhr17J2n9pwpkHas4RV4bzoeEAAAAD8gk/QFhBFqn18QXMRqC1sQsESz7xBTk37CMwtPNdDg8QNn4YQFFvpcLFahFnZ50GAe+xXZuwSdnlLweaKHOkH</EncryptedPassword>
+    <History>True|2025-05-15T07:49:42.2118338Z||;True|2025-05-15T10:26:31.6515995+08:00||;False|2025-05-14T23:56:38.3369819+08:00||;False|2025-05-14T23:23:55.0160003+08:00||;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+  <ItemGroup>
+    <DestinationConnectionStrings Include="DefaultConnection">
+      <Value>Data Source=KERRYO%3bInitial Catalog=BillingSystem%3bIntegrated Security=True%3bEncrypt=True%3bTrust Server Certificate=True</Value>
+    </DestinationConnectionStrings>
+  </ItemGroup>
+  <ItemGroup>
+    <EFMigrations Include="BoardPaySystem.Models.ApplicationDbContext">
+      <Value>Data Source=KERRYO%3bInitial Catalog=BillingSystem%3bIntegrated Security=True%3bEncrypt=True%3bTrust Server Certificate=True</Value>
+    </EFMigrations>
+  </ItemGroup>
+</Project>

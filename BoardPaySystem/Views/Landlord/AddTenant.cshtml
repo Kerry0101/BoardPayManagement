@@ -1,0 +1,226 @@
+﻿@model BoardPaySystem.Models.CreateTenantViewModel
+@{
+    ViewData["Title"] = "Add Tenant";
+    Layout = "_LandlordLayout";
+    var buildings = ViewBag.Buildings as List<Building>;
+}
+
+<div class="content-section">
+    <h3><i class="fas fa-user-plus"></i> Add New Tenant</h3>
+    <p style="color: #555; font-style: italic; margin-bottom: 20px;">Tenant will inherit default Rent, Water, and WiFi fees from the selected building. These can be overridden later.</p>
+    
+    <form asp-action="AddTenant" method="post" id="addTenantForm">
+        @Html.AntiForgeryToken()
+        
+        <div class="form-grid">
+            <div class="form-group">
+                <label asp-for="Username">Username</label>
+                <input asp-for="Username" class="form-control" required />
+                <span asp-validation-for="Username" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Password">Password</label>
+                <div style="position:relative;">
+                    <input asp-for="Password" class="form-control" type="password" required id="passwordInput" />
+                    <span class="toggle-password" onclick="togglePasswordVisibility('passwordInput', 'passwordEye')" style="position:absolute;top:50%;right:12px;transform:translateY(-50%);cursor:pointer;">
+                        <i id="passwordEye" class="fa fa-eye"></i>
+                    </span>
+                </div>
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="FirstName">First Name</label>
+                <input asp-for="FirstName" class="form-control" required />
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="LastName">Last Name</label>
+                <input asp-for="LastName" class="form-control" required />
+                <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="PhoneNumber">Phone Number</label>
+                <input asp-for="PhoneNumber" class="form-control" required />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="StartDate">Contract Start Date</label>
+                <input asp-for="StartDate" class="form-control" type="date" required />
+                <span asp-validation-for="StartDate" class="text-danger"></span>
+                <small class="form-text text-muted">This is the date when the tenant's contract starts. The first bill will be generated with this date, and future bills will be due based on this tenant's billing cycle.</small>
+            </div>
+
+            <div class="form-group">
+                <label>Building</label>
+                <select id="buildingSelect" name="BuildingId" class="form-control" required>
+                    <option value="">Select a building</option>
+                    @foreach (var building in buildings)
+                    {
+                        <option value="@building.BuildingId">@building.BuildingName</option>
+                    }
+                </select>
+                <span class="text-danger field-validation-valid" data-valmsg-for="BuildingId"></span>
+            </div>
+
+            <div class="form-group">
+                <label>Floor</label>
+                <select id="floorSelect" name="FloorId" class="form-control" disabled required>
+                    <option value="">Select a floor</option>
+                </select>
+                <span class="text-danger field-validation-valid" data-valmsg-for="FloorId"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="RoomId">Room</label>
+                <select asp-for="RoomId" id="roomSelect" class="form-control" disabled required>
+                    <option value="">Select a room</option>
+                </select>
+                <span asp-validation-for="RoomId" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="button-group" style="margin-top: 25px;">
+            <button type="submit" class="btn-success">Add Tenant</button>
+            <a asp-action="ManageTenants" asp-controller="Landlord" class="btn-secondary">Cancel</a>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">@TempData["Success"]</div>
+        }
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger">
+                <div asp-validation-summary="All" class="text-danger"></div>
+            </div>
+        }
+    </form>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function() {
+            // Initialize form validation
+            $("#addTenantForm").validate({
+                rules: {
+                    Username: "required",
+                    Password: "required",
+                    FirstName: "required",
+                    LastName: "required",
+                    PhoneNumber: "required",
+                    StartDate: "required",
+                    BuildingId: "required",
+                    FloorId: "required",
+                    RoomId: "required"
+                },
+                messages: {
+                    Username: "Please enter username",
+                    Password: "Please enter password",
+                    FirstName: "Please enter first name",
+                    LastName: "Please enter last name",
+                    PhoneNumber: "Please enter phone number",
+                    StartDate: "Please select a contract start date",
+                    BuildingId: "Please select a building",
+                    FloorId: "Please select a floor",
+                    RoomId: "Please select a room"
+                },
+                errorElement: "span",
+                errorClass: "text-danger"
+            });
+
+            // Building select change handler with extra logging
+            $('#buildingSelect').on('change', async function() {
+                const buildingId = this.value;
+                const floorSelect = $('#floorSelect');
+                const roomSelect = $('#roomSelect');
+                console.log('Building selected:', buildingId);
+                // Reset and disable floor and room selects
+                floorSelect.html('<option value="">Select a floor</option>');
+                roomSelect.html('<option value="">Select a room</option>');
+                floorSelect.prop('disabled', !buildingId);
+                roomSelect.prop('disabled', true);
+
+                if (buildingId) {
+                    try {
+                        const url = '@Url.Action("GetFloors", "Landlord")?id=' + buildingId;
+                        console.log('Fetching floors from:', url);
+                        const response = await fetch(url);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        const result = await response.json();
+                        console.log('Floors loaded:', result);
+                        if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+                            result.data.forEach(floor => {
+                                floorSelect.append(`<option value="${floor.floorId}">${floor.displayName}</option>`);
+                            });
+                            floorSelect.prop('disabled', false);
+                        } else {
+                            floorSelect.html('<option value="">No floors available</option>');
+                        }
+                    } catch (error) {
+                        console.error('Error loading floors:', error);
+                        alert('Error loading floors. Please try again.');
+                        floorSelect.html('<option value="">Error loading floors</option>');
+                    }
+                }
+            });
+
+            // Floor select change handler (unchanged, but add logging)
+            $('#floorSelect').on('change', async function() {
+                const floorId = this.value;
+                const roomSelect = $('#roomSelect');
+                console.log('Floor selected:', floorId);
+                // Reset and disable room select
+                roomSelect.html('<option value="">Select a room</option>');
+                roomSelect.prop('disabled', !floorId);
+
+                if (floorId) {
+                    try {
+                        const url = '@Url.Action("GetAvailableRooms", "Room")?floorId=' + floorId;
+                        console.log('Fetching rooms from:', url);
+                        const response = await fetch(url);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        const result = await response.json();
+                        console.log('Rooms loaded:', result);
+                        if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+                            result.data.forEach(room => {
+                                roomSelect.append(`<option value="${room.roomId}">${room.displayName}</option>`);
+                            });
+                            roomSelect.prop('disabled', false);
+                        } else {
+                            roomSelect.html('<option value="">No rooms available</option>');
+                        }
+                    } catch (error) {
+                        console.error('Error loading rooms:', error);
+                        alert('Error loading rooms. Please try again.');
+                        roomSelect.html('<option value="">Error loading rooms</option>');
+                    }
+                }
+            });
+        });
+
+        function togglePasswordVisibility(inputId, eyeId) {
+        var input = document.getElementById(inputId);
+        var eye = document.getElementById(eyeId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            eye.classList.remove('fa-eye');
+            eye.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            eye.classList.remove('fa-eye-slash');
+            eye.classList.add('fa-eye');
+        }
+        }
+    </script>
+}

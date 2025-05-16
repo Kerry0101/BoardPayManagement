@@ -1,0 +1,39 @@
+@{
+    ViewData["Title"] = "Generate Bills";
+    Layout = "_LandlordLayout";
+}
+
+<div class="content-section">
+    <div class="d-flex align-items-center mb-4">
+        <h3 class="page-title mb-0">
+            <i class="fas fa-file-invoice-dollar"></i>
+            Generate Monthly Bills
+        </h3>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <p class="mb-4">
+                Generate monthly bills for tenants whose billing cycle day matches today's date. You can also select a specific date to generate bills for tenants with that billing cycle day.
+            </p>
+
+            <form asp-action="GenerateBills" method="post">
+                <div class="form-group mb-3">
+                    <label for="billingDate" class="form-label">Billing Date (optional)</label>
+                    <input type="date" id="billingDate" name="billingDate" class="form-control" />
+                    <small class="form-text text-muted">If not specified, today's date will be used.</small>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Bills will be generated for tenants whose billing cycle day matches the day of the selected date.
+                    For example, if you select May 15, bills will be generated for all tenants with a billing cycle day of 15.
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-file-invoice"></i> Generate Bills
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

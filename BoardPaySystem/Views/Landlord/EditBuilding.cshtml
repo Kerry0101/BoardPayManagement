@@ -1,0 +1,403 @@
+@model BoardPaySystem.Models.Building
+@{
+    ViewData["Title"] = "Edit Building";
+    Layout = "_LandlordLayout";
+}
+
+<div class="content-section">
+    <h3><i class="fas fa-edit"></i> Edit Building</h3>
+
+    <form asp-action="EditBuilding" asp-controller="Landlord" method="post" id="editBuildingForm">
+        <input type="hidden" asp-for="BuildingId" />
+        
+        <!-- Store original values for change detection -->
+        <input type="hidden" id="originalBuildingName" value="@Model.BuildingName" />
+        <input type="hidden" id="originalAddress" value="@Model.Address" />
+        <input type="hidden" id="originalMonthlyRent" value="@Model.DefaultMonthlyRent" />
+        <input type="hidden" id="originalWaterFee" value="@Model.DefaultWaterFee" />
+        <input type="hidden" id="originalElectricityFee" value="@Model.DefaultElectricityFee" />
+        <input type="hidden" id="originalWifiFee" value="@Model.DefaultWifiFee" />
+        <input type="hidden" id="originalLateFee" value="@Model.LateFee" />
+        
+        <div class="form-grid">
+            <div class="form-group">
+                <label asp-for="BuildingName">Building Name</label>
+                <input asp-for="BuildingName" class="form-control" required />
+                <span asp-validation-for="BuildingName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Address">Address</label>
+                <input asp-for="Address" class="form-control" required />
+                <span asp-validation-for="Address" class="text-danger"></span>
+            </div>
+
+            <div class="form-group form-grid-col-1">
+                <h4 class="section-title">Default Rates</h4>
+                <p class="text-muted">These rates will be used as defaults for all rooms in this building.</p>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="DefaultMonthlyRent">Default Monthly Rent</label>
+                <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input asp-for="DefaultMonthlyRent" class="form-control" type="number" step="0.01" required />
+                </div>
+                <span asp-validation-for="DefaultMonthlyRent" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="DefaultWaterFee">Default Water Fee</label>
+                <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input asp-for="DefaultWaterFee" class="form-control" type="number" step="0.01" required />
+                </div>
+                <span asp-validation-for="DefaultWaterFee" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="DefaultElectricityFee">Default Electricity Fee</label>
+                <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input asp-for="DefaultElectricityFee" class="form-control" type="number" step="0.01" required />
+                </div>
+                <span asp-validation-for="DefaultElectricityFee" class="text-danger"></span>
+                <small class="form-text text-muted">Rate per kilowatt-hour (kWh)</small>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="DefaultWifiFee">Default WiFi Fee</label>
+                <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input asp-for="DefaultWifiFee" class="form-control" type="number" step="0.01" required />
+                </div>
+                <span asp-validation-for="DefaultWifiFee" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="LateFee">Late Payment Fee Percentage</label>
+                <div class="input-group">
+                    <input asp-for="LateFee" class="form-control" type="number" step="0.01" min="0" max="100" required />
+                    <span class="input-group-text">%</span>
+                </div>
+                <span asp-validation-for="LateFee" class="text-danger"></span>
+                <small class="form-text text-muted">Percentage increase applied to the total monthly bill if payment is late. For example, if set to 5%, a bill of ₱5,000 would increase to ₱5,250 when late.</small>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button type="button" class="btn-success" onclick="confirmEdit()">Save Changes</button>
+            <a href="#" class="btn-secondary" onclick="confirmCancel()">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<!-- Edit Confirmation Modal -->
+<div class="modal fade" id="editConfirmModal" tabindex="-1" aria-labelledby="editConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editConfirmModalLabel">
+                    <i class="fas fa-exclamation-circle text-warning"></i>
+                    Confirm Changes
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to save these changes?</p>
+                <div id="changesDetail" class="mt-3">
+                    <p class="fw-bold mb-2">The following changes will be applied:</p>
+                    <ul id="changesList" class="list-unstyled">
+                        <!-- Changes will be listed here dynamically -->
+                    </ul>
+                </div>
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-info-circle"></i>
+                    Note: These changes will affect the default rates for all rooms in this building.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">No, Keep Editing</button>
+                <button type="button" class="btn-success" onclick="submitForm()">Yes, Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- No Changes Modal -->
+<div class="modal fade" id="noChangesModal" tabindex="-1" aria-labelledby="noChangesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="noChangesModalLabel">
+                    <i class="fas fa-info-circle text-info"></i>
+                    No Changes Detected
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>No changes have been made to the building details.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">Continue Editing</button>
+                <a asp-action="ManageBuildings" class="btn-primary">Return to Buildings</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Confirmation Modal -->
+<div class="modal fade" id="cancelConfirmModal" tabindex="-1" aria-labelledby="cancelConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="cancelConfirmModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Warning: Unsaved Changes
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle"></i>
+                    You have unsaved changes that will be lost if you cancel.
+                </div>
+                <div id="cancelChangesList" class="mt-3">
+                    <p class="fw-bold mb-2">Unsaved changes:</p>
+                    <ul class="list-unstyled">
+                        <!-- Changes will be listed here dynamically -->
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-arrow-left"></i>
+                    Continue Editing
+                </button>
+                <a asp-action="ManageBuildings" class="btn-danger">
+                    <i class="fas fa-times"></i>
+                    Discard Changes
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let activeModal = null;
+
+        // Function to force cleanup all modal-related elements and styles
+        function forceCleanupModals() {
+            // Remove all modal backdrops first
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => {
+                backdrop.classList.remove('show');
+                backdrop.remove();
+            });
+
+            // Clean up body
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+
+            // Reset all modals
+            document.querySelectorAll('.modal').forEach(modal => {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.dispose();
+                }
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+                modal.removeAttribute('aria-modal');
+                modal.removeAttribute('role');
+            });
+
+            // Force remove any remaining backdrop
+            const remainingBackdrops = document.querySelectorAll('.modal-backdrop');
+            remainingBackdrops.forEach(backdrop => backdrop.remove());
+
+            // Reset active modal
+            activeModal = null;
+        }
+
+        // Initialize all modals with proper options
+        document.addEventListener('DOMContentLoaded', function() {
+            const modals = [
+                'editConfirmModal',
+                'noChangesModal',
+                'cancelConfirmModal'
+            ];
+
+            // Initial cleanup
+            forceCleanupModals();
+
+            modals.forEach(modalId => {
+                const modalElement = document.getElementById(modalId);
+                if (!modalElement) return;
+
+                // Initialize modal with specific options
+                const modal = new bootstrap.Modal(modalElement, {
+                    backdrop: false // Disable Bootstrap's backdrop handling
+                });
+
+                // Handle modal events
+                modalElement.addEventListener('hidden.bs.modal', forceCleanupModals);
+                modalElement.addEventListener('show.bs.modal', function() {
+                    if (activeModal) {
+                        activeModal.hide();
+                        forceCleanupModals();
+                    }
+                    activeModal = modal;
+                });
+            });
+
+            // Handle clicks outside modals
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    forceCleanupModals();
+                }
+            });
+
+            // Handle escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    forceCleanupModals();
+                }
+            });
+        });
+
+        function formatCurrency(value) {
+            return '₱' + parseFloat(value).toFixed(2);
+        }
+
+        function formatPercentage(value) {
+            return parseFloat(value).toFixed(2) + '%';
+        }
+
+        function getChanges() {
+            const changes = [];
+            const currentValues = {
+                buildingName: $('#BuildingName').val(),
+                address: $('#Address').val(),
+                defaultMonthlyRent: $('#DefaultMonthlyRent').val(),
+                defaultWaterFee: $('#DefaultWaterFee').val(),
+                defaultElectricityFee: $('#DefaultElectricityFee').val(),
+                defaultWifiFee: $('#DefaultWifiFee').val(),
+                lateFee: $('#LateFee').val()
+            };
+
+            const originalValues = {
+                buildingName: $('#originalBuildingName').val(),
+                address: $('#originalAddress').val(),
+                defaultMonthlyRent: $('#originalMonthlyRent').val(),
+                defaultWaterFee: $('#originalWaterFee').val(),
+                defaultElectricityFee: $('#originalElectricityFee').val(),
+                defaultWifiFee: $('#originalWifiFee').val(),
+                lateFee: $('#originalLateFee').val()
+            };
+
+            if (currentValues.buildingName !== originalValues.buildingName) {
+                changes.push(`Building Name: "${originalValues.buildingName}" → "${currentValues.buildingName}"`);
+            }
+            if (currentValues.address !== originalValues.address) {
+                changes.push(`Address: "${originalValues.address}" → "${currentValues.address}"`);
+            }
+            if (currentValues.defaultMonthlyRent !== originalValues.defaultMonthlyRent) {
+                changes.push(`Monthly Rent: ${formatCurrency(originalValues.defaultMonthlyRent)} → ${formatCurrency(currentValues.defaultMonthlyRent)}`);
+            }
+            if (currentValues.defaultWaterFee !== originalValues.defaultWaterFee) {
+                changes.push(`Water Fee: ${formatCurrency(originalValues.defaultWaterFee)} → ${formatCurrency(currentValues.defaultWaterFee)}`);
+            }
+            if (currentValues.defaultElectricityFee !== originalValues.defaultElectricityFee) {
+                changes.push(`Electricity Fee: ${formatCurrency(originalValues.defaultElectricityFee)} → ${formatCurrency(currentValues.defaultElectricityFee)}`);
+            }
+            if (currentValues.defaultWifiFee !== originalValues.defaultWifiFee) {
+                changes.push(`WiFi Fee: ${formatCurrency(originalValues.defaultWifiFee)} → ${formatCurrency(currentValues.defaultWifiFee)}`);
+            }
+            if (currentValues.lateFee !== originalValues.lateFee) {
+                changes.push(`Late Fee: ${formatPercentage(originalValues.lateFee)} → ${formatPercentage(currentValues.lateFee)}`);
+            }
+
+            return changes;
+        }
+
+        function showModal(modalId) {
+            forceCleanupModals();
+            const modalElement = document.getElementById(modalId);
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: false
+            });
+            modal.show();
+            activeModal = modal;
+        }
+
+        function confirmEdit() {
+            if (!$("#editBuildingForm").valid()) {
+                return;
+            }
+
+            const changes = getChanges();
+            if (changes.length === 0) {
+                showModal('noChangesModal');
+                return;
+            }
+
+            // Update the changes list in the modal
+            const changesList = document.getElementById('changesList');
+            changesList.innerHTML = changes.map(change => `<li><i class="fas fa-arrow-right text-primary"></i> ${change}</li>`).join('');
+
+            showModal('editConfirmModal');
+        }
+
+        function confirmCancel() {
+            const changes = getChanges();
+            if (changes.length > 0) {
+                // Update the changes list in the cancel modal
+                const cancelChangesList = document.getElementById('cancelChangesList');
+                cancelChangesList.innerHTML = `
+                    <p class="fw-bold mb-2">Unsaved changes:</p>
+                    <ul class="list-unstyled">
+                        ${changes.map(change => `
+                            <li class="mb-2">
+                                <i class="fas fa-times-circle text-danger"></i>
+                                ${change}
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+                showModal('cancelConfirmModal');
+            } else {
+                window.location.href = '@Url.Action("ManageBuildings")';
+            }
+            return false;
+        }
+
+        function submitForm() {
+            const form = document.getElementById('editBuildingForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            forceCleanupModals();
+            form.submit();
+        }
+
+        // Ensure numeric inputs are non-negative
+        $('input[type="number"]').on('input', function() {
+            if ($(this).val() < 0) {
+                $(this).val(0);
+            }
+        });
+
+        // Prevent accidental navigation away
+        window.addEventListener('beforeunload', function(e) {
+            if (getChanges().length > 0) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+    </script>
+} 

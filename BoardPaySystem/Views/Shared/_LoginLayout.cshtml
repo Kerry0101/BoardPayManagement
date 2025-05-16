@@ -1,0 +1,19 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Boarding House System</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <!-- Add reference to FontAwesome if needed locally or keep CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="login-page">
+    @* Add specific class for login body styling *@
+
+    @RenderBody() @* Renders the content of the specific view (Home/Index.cshtml) *@
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,328 @@
+﻿@model BoardPaySystem.Models.ApplicationUser
+@{
+    ViewData["Title"] = "My Profile";
+    Layout = "_LandlordLayout";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card profile-card shadow-lg border-0 mb-4">
+                <div class="card-body p-4 d-flex flex-column flex-md-row align-items-center gap-4">
+                    <div class="profile-avatar flex-shrink-0">
+                        
+                    </div>
+                    <div class="flex-grow-1 w-100">
+                        <h2 class="fw-bold mb-3 text-primary d-flex align-items-center">
+                            <i class="fas fa-user-shield me-2"></i> My Profile
+                        </h2>
+                        <hr>
+                        <form autocomplete="off">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label"><i class="fas fa-user me-1"></i>Name</label>
+                                        <input type="text" class="form-control" value="@Model.FirstName @Model.LastName" readonly tabindex="-1" id="profileNameDisplay">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label"><i class="fas fa-user-tag me-1"></i>Username</label>
+                                        <input type="text" class="form-control" value="@Model.UserName" readonly tabindex="-1">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label"><i class="fas fa-phone-alt me-1"></i>Contact Number</label>
+                                        <input type="text" class="form-control" value="@Model.PhoneNumber" readonly tabindex="-1" id="profilePhoneDisplay">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label"><i class="fas fa-user-tie me-1"></i>Role</label>
+                                        <input type="text" class="form-control" value="Landlord" readonly tabindex="-1">
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        <div id="profile-success-message" class="alert alert-success mt-3 d-none"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow border-0 mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold text-primary mb-3"><i class="fas fa-cog me-2"></i>Account Settings</h4>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="#" class="btn btn-outline-primary px-4 py-2" onclick="showChangePasswordForm(); return false;">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </a>
+                        <a href="#" class="btn btn-outline-secondary px-4 py-2" onclick="showUpdateProfileForm(); return false;">
+                            <i class="fas fa-user-edit me-2"></i>Update Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Change Password Modal -->
+            <div id="change-password-form" class="modal fade" tabindex="-1" aria-labelledby="changePasswordLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="changePasswordLabel"><i class="fas fa-key me-2"></i>Change Password</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="password-form" method="post">
+                                @Html.AntiForgeryToken()
+                                <div class="mb-3">
+                                    <label for="current-password" class="form-label">Current Password</label>
+                                    <div style="position:relative;">
+                                        <input type="password" id="current-password" class="form-control" required autocomplete="current-password">
+                                        <span class="toggle-password" onclick="togglePasswordVisibility('current-password', 'currentPasswordEye')" style="position:absolute;top:50%;right:12px;transform:translateY(-50%);cursor:pointer;">
+                                            <i id="currentPasswordEye" class="fa fa-eye"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="new-password" class="form-label">New Password</label>
+                                    <div style="position:relative;">
+                                        <input type="password" id="new-password" class="form-control" required autocomplete="new-password">
+                                        <span class="toggle-password" onclick="togglePasswordVisibility('new-password', 'newPasswordEye')" style="position:absolute;top:50%;right:12px;transform:translateY(-50%);cursor:pointer;">
+                                            <i id="newPasswordEye" class="fa fa-eye"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="confirm-password" class="form-label">Confirm New Password</label>
+                                    <div style="position:relative;">
+                                        <input type="password" id="confirm-password" class="form-control" required autocomplete="new-password">
+                                        <span class="toggle-password" onclick="togglePasswordVisibility('confirm-password', 'confirmPasswordEye')" style="position:absolute;top:50%;right:12px;transform:translateY(-50%);cursor:pointer;">
+                                            <i id="confirmPasswordEye" class="fa fa-eye"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="submit" class="btn btn-primary">Update Password</button>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                </div>
+                                <p id="password-message" class="text-success mt-2"></p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Update Profile Modal -->
+            <div id="update-profile-form" class="modal fade" tabindex="-1" aria-labelledby="updateProfileLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="updateProfileLabel"><i class="fas fa-user-edit me-2"></i>Update Profile</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="profile-form" method="post">
+                                @Html.AntiForgeryToken()
+                                <div class="mb-3">
+                                    <label for="profile-firstname" class="form-label">First Name</label>
+                                    <input type="text" id="profile-firstname" class="form-control" value="@Model.FirstName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="profile-lastname" class="form-label">Last Name</label>
+                                    <input type="text" id="profile-lastname" class="form-control" value="@Model.LastName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="profile-phone" class="form-label">Contact Number</label>
+                                    <input type="tel" id="profile-phone" class="form-control" value="@Model.PhoneNumber" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="profile-username" class="form-label">Username</label>
+                                    <input type="text" id="profile-username" class="form-control" value="@Model.UserName" required>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                </div>
+                                <p id="profile-message" class="text-success mt-2"></p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let activeModal = null;
+        function forceCleanupModals() {
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => {
+                backdrop.classList.remove('show');
+                backdrop.remove();
+            });
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.querySelectorAll('.modal').forEach(modal => {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.dispose();
+                }
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+                modal.removeAttribute('aria-modal');
+                modal.removeAttribute('role');
+            });
+            const remainingBackdrops = document.querySelectorAll('.modal-backdrop');
+            remainingBackdrops.forEach(backdrop => backdrop.remove());
+            activeModal = null;
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            forceCleanupModals();
+            const modals = ['change-password-form', 'update-profile-form'];
+            modals.forEach(modalId => {
+                const modalElement = document.getElementById(modalId);
+                if (!modalElement) return;
+                const modal = new bootstrap.Modal(modalElement, { backdrop: false });
+                modalElement.addEventListener('hidden.bs.modal', forceCleanupModals);
+                modalElement.addEventListener('show.bs.modal', function() {
+                    if (activeModal) {
+                        activeModal.hide();
+                        forceCleanupModals();
+                    }
+                    activeModal = modal;
+                });
+            });
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    forceCleanupModals();
+                }
+            });
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    forceCleanupModals();
+                }
+            });
+        });
+        function showChangePasswordForm() {
+            forceCleanupModals();
+            const modalElement = document.getElementById('change-password-form');
+            const modal = new bootstrap.Modal(modalElement, { backdrop: false });
+            modal.show();
+            activeModal = modal;
+        }
+        function showUpdateProfileForm() {
+            forceCleanupModals();
+            const modalElement = document.getElementById('update-profile-form');
+            const modal = new bootstrap.Modal(modalElement, { backdrop: false });
+            modal.show();
+            activeModal = modal;
+        }
+        // AJAX for Change Password
+        document.getElementById('password-form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const currentPassword = document.getElementById('current-password').value.trim();
+            const newPassword = document.getElementById('new-password').value.trim();
+            const confirmPassword = document.getElementById('confirm-password').value.trim();
+            const msgElement = document.getElementById('password-message');
+            console.log('currentPassword:', currentPassword, 'newPassword:', newPassword, 'confirmPassword:', confirmPassword);
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                msgElement.textContent = 'All fields are required.';
+                msgElement.classList.remove('text-success');
+                msgElement.classList.add('text-danger');
+                return;
+            }
+            msgElement.textContent = '';
+            msgElement.classList.remove('text-danger');
+            const token = document.querySelector('#password-form input[name="__RequestVerificationToken"]').value;
+            const formData = new FormData();
+            formData.append('currentPassword', currentPassword);
+            formData.append('newPassword', newPassword);
+            formData.append('confirmPassword', confirmPassword);
+            formData.append('__RequestVerificationToken', token);
+            fetch('@Url.Action("ChangePassword", "Landlord")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                msgElement.textContent = data.message;
+                if (data.success) {
+                    msgElement.classList.remove('text-danger');
+                    msgElement.classList.add('text-success');
+                    setTimeout(() => {
+                        var modal = bootstrap.Modal.getInstance(document.getElementById('change-password-form'));
+                        modal.hide();
+                        msgElement.textContent = '';
+                        forceCleanupModals();
+                    }, 1200);
+                } else {
+                    msgElement.classList.remove('text-success');
+                    msgElement.classList.add('text-danger');
+                }
+            });
+        });
+        // Clear error message on input
+        ['current-password', 'new-password', 'confirm-password'].forEach(id => {
+            document.getElementById(id)?.addEventListener('input', function() {
+                const msgElement = document.getElementById('password-message');
+                msgElement.textContent = '';
+                msgElement.classList.remove('text-danger', 'text-success');
+            });
+        });
+        // AJAX for Update Profile
+        document.getElementById('profile-form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const firstName = document.getElementById('profile-firstname').value;
+            const lastName = document.getElementById('profile-lastname').value;
+            const phoneNumber = document.getElementById('profile-phone').value;
+            const userName = document.getElementById('profile-username').value;
+            const msgElement = document.getElementById('profile-message');
+            const token = document.querySelector('#profile-form input[name="__RequestVerificationToken"]').value;
+            const formData = new FormData();
+            formData.append('firstName', firstName);
+            formData.append('lastName', lastName);
+            formData.append('phoneNumber', phoneNumber);
+            formData.append('userName', userName);
+            formData.append('__RequestVerificationToken', token);
+            fetch('@Url.Action("UpdateProfile", "Landlord")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                msgElement.textContent = data.message;
+                if (data.success) {
+                    // Update displayed name and phone
+                    document.getElementById('profileNameDisplay').value = firstName + ' ' + lastName;
+                    document.getElementById('profilePhoneDisplay').value = phoneNumber;
+                    document.querySelector('input[readonly][value="@Model.UserName"]')?.setAttribute('value', userName);
+                    // Show a success message on the main profile card
+                    const mainMsg = document.getElementById('profile-success-message');
+                    mainMsg.textContent = data.message;
+                    mainMsg.classList.remove('d-none');
+                    setTimeout(() => {
+                        var modal = bootstrap.Modal.getInstance(document.getElementById('update-profile-form'));
+                        modal.hide();
+                        msgElement.textContent = '';
+                        forceCleanupModals();
+                        mainMsg.classList.add('d-none');
+                    }, 1200);
+                }
+            });
+        });
+        function togglePasswordVisibility(inputId, eyeId) {
+            var input = document.getElementById(inputId);
+            var eye = document.getElementById(eyeId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                eye.classList.remove('fa-eye');
+                eye.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                eye.classList.remove('fa-eye-slash');
+                eye.classList.add('fa-eye');
+            }
+        }
+    </script>
+}

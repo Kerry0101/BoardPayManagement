@@ -1,0 +1,605 @@
+@model IEnumerable<BoardPaySystem.Models.Floor>
+@{
+    ViewData["Title"] = "Manage Floors";
+    Layout = "_LandlordLayout";
+    var building = ViewBag.Building as BoardPaySystem.Models.Building;
+    if (building == null)
+    {
+        throw new InvalidOperationException("Building data is required");
+    }
+}
+
+<div class="content-section">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-controller="Landlord" asp-action="ManageBuildings">Buildings</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a asp-controller="Landlord" asp-action="BuildingDetails" asp-route-id="@building.BuildingId">@building.BuildingName</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                Floors
+            </li>
+        </ol>
+    </nav>
+    <div class="page-header">
+        <div class="header-content">
+            <h3>
+                <i class="fas fa-layer-group"></i>
+                Manage Floors - @building.BuildingName
+            </h3>
+            <a asp-action="AddFloor" asp-route-buildingId="@building.BuildingId" class="btn-add">
+                <i class="fas fa-plus"></i>
+                Add New Floor
+            </a>
+        </div>
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i>
+                @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["Info"] != null)
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="fas fa-info-circle"></i>
+                @TempData["Info"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-state-content">
+                <i class="fas fa-layer-group fa-3x"></i>
+                <h4>No Floors Yet</h4>
+                <p>Get started by adding your first floor!</p>
+                <a asp-action="AddFloor" asp-route-buildingId="@building.BuildingId" class="btn-add mt-3">
+                    <i class="fas fa-plus"></i>
+                    Add New Floor
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="buildings-list">
+            @foreach (var floor in Model.OrderByDescending(f => f.FloorNumber))
+            {
+                <div class="building-item">
+                    <div class="building-info floor-info-cols">
+                        <div class="floor-col floor-name"><h4>@floor.FloorName</h4></div>
+                        <div class="floor-col floor-number">
+                            <i class="fas fa-layer-group"></i> Floor #@floor.FloorNumber
+                        </div>
+                        <div class="floor-col floor-rooms">
+                            <i class="fas fa-door-closed"></i> @(floor.Rooms?.Count ?? 0) Rooms
+                        </div>
+                    </div>
+                    <div class="building-actions">
+                        <a asp-controller="Room" asp-action="ManageRooms" asp-route-floorId="@floor.FloorId" class="btn-icon" title="Manage Rooms">
+                            <i class="fas fa-door-open"></i>
+                        </a>
+                        <a asp-action="EditFloor" asp-route-id="@floor.FloorId" class="btn-icon" title="Edit Floor">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button onclick="confirmDelete(@floor.FloorId, '@floor.FloorName')" class="btn-icon btn-icon-danger" title="Delete Floor">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Warning Modal -->
+<div class="modal fade" id="warningModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="warningModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="warningModalLabel">
+                    <i class="fas fa-exclamation-triangle text-warning"></i>
+                    Warning
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="warningMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle text-danger"></i>
+                    Confirm Delete
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i> Delete Floor
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Floor Warning Modal -->
+<div class="modal fade" id="addFloorWarningModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="addFloorWarningModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="addFloorWarningModalLabel">
+                    <i class="fas fa-info-circle"></i>
+                    Add New Floor
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Please Note:</strong>
+                </div>
+                <div class="info-list">
+                    <p><i class="fas fa-check-circle text-info"></i> Adding a new floor will:</p>
+                    <ul>
+                        <li>Create a new floor level in the building</li>
+                        <li>Allow you to add rooms to this floor</li>
+                        <li>Inherit default rates from building settings</li>
+                    </ul>
+                </div>
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>Note:</strong> Make sure to add rooms to the floor after creation for proper building management.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button type="button" class="btn-info" id="confirmAddFloorBtn">
+                    <i class="fas fa-plus"></i>
+                    Add Floor
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Floor Warning Modal -->
+<div class="modal fade" id="deleteFloorWarningModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="deleteFloorWarningModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteFloorWarningModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Warning: Delete Floor
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>This action cannot be undone!</strong>
+                </div>
+                <p>Are you sure you want to delete "<span id="floorNameToDelete" class="fw-bold"></span>"?</p>
+                <div class="warning-list">
+                    <p><i class="fas fa-exclamation-triangle text-danger"></i> The following will be permanently deleted:</p>
+                    <ul>
+                        <li>All rooms on this floor</li>
+                        <li>All tenant assignments to these rooms</li>
+                        <li>All billing records associated with these rooms</li>
+                    </ul>
+                </div>
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Note:</strong> This will not delete tenant accounts, but they will be unassigned from their rooms.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button type="button" class="btn-danger" id="confirmDeleteFloorBtn">
+                    <i class="fas fa-trash"></i>
+                    Delete Floor
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentFloorId = null;
+        let activeModal = null;
+
+        // Function to force cleanup all modal-related elements and styles
+        function forceCleanupModals() {
+            // Remove all modal backdrops first
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => {
+                backdrop.classList.remove('show');
+                backdrop.remove();
+            });
+
+            // Clean up body
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+
+            // Reset all modals
+            document.querySelectorAll('.modal').forEach(modal => {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.dispose();
+                }
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+                modal.removeAttribute('aria-modal');
+                modal.removeAttribute('role');
+            });
+
+            // Force remove any remaining backdrop
+            const remainingBackdrops = document.querySelectorAll('.modal-backdrop');
+            remainingBackdrops.forEach(backdrop => backdrop.remove());
+
+            // Reset active modal
+            activeModal = null;
+        }
+
+        // Initialize all modals with proper options
+        document.addEventListener('DOMContentLoaded', function() {
+            const modals = [
+                'warningModal',
+                'deleteModal',
+                'addFloorWarningModal',
+                'deleteFloorWarningModal'
+            ];
+
+            // Initial cleanup
+            forceCleanupModals();
+
+            modals.forEach(modalId => {
+                const modalElement = document.getElementById(modalId);
+                if (!modalElement) return;
+
+                // Initialize modal with specific options
+                const modal = new bootstrap.Modal(modalElement, {
+                    backdrop: false // Disable Bootstrap's backdrop handling
+                });
+
+                // Handle modal events
+                modalElement.addEventListener('hidden.bs.modal', forceCleanupModals);
+                modalElement.addEventListener('show.bs.modal', function() {
+                    if (activeModal) {
+                        activeModal.hide();
+                        forceCleanupModals();
+                    }
+                    activeModal = modal;
+                });
+            });
+
+            // Handle clicks outside modals
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    forceCleanupModals();
+                }
+            });
+
+            // Handle escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    forceCleanupModals();
+                }
+            });
+
+            // Set up delete confirmation button
+            document.getElementById('confirmDeleteBtn')?.addEventListener('click', function() {
+                if (currentFloorId) {
+                    deleteFloor(currentFloorId);
+                }
+            });
+
+            // Handle Add Floor button click
+            const addFloorBtn = document.querySelector('a.btn-success');
+            if (addFloorBtn) {
+                addFloorBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const addUrl = this.getAttribute('href');
+                    showModal('addFloorWarningModal');
+                    document.getElementById('confirmAddFloorBtn').onclick = function() {
+                        window.location.href = addUrl;
+                    };
+                });
+            }
+
+            // Auto-dismiss alerts
+            setTimeout(function() {
+                document.querySelectorAll('.alert').forEach(alert => {
+                    if (alert) {
+                        alert.classList.remove('show');
+                        setTimeout(() => alert.remove(), 300);
+                    }
+                });
+            }, 5000);
+        });
+
+        function showModal(modalId) {
+            forceCleanupModals();
+            const modalElement = document.getElementById(modalId);
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: false
+            });
+            modal.show();
+            activeModal = modal;
+        }
+
+        function confirmDelete(floorId, floorName) {
+            // Show the delete floor warning modal directly
+            currentFloorId = floorId;
+            document.getElementById('floorNameToDelete').textContent = floorName;
+            showModal('deleteFloorWarningModal');
+            
+            // Set up click handler for confirmation button
+            document.getElementById('confirmDeleteFloorBtn').onclick = function() {
+                deleteFloor(floorId);
+            };
+        }
+
+        function deleteFloor(floorId) {
+            // Get anti-forgery token if it exists
+            const tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            const token = tokenElement ? tokenElement.value : '';
+            
+            // Show loading state
+            const confirmBtn = document.getElementById('confirmDeleteFloorBtn');
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+            confirmBtn.disabled = true;
+            
+            // Send request with fetch API instead of jQuery
+            fetch('@Url.Action("DeleteFloor", "Floor")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: `id=${floorId}${token ? `&__RequestVerificationToken=${token}` : ''}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                forceCleanupModals();
+                if (data.success) {
+                    showSuccessAlert(data.message);
+                    setTimeout(function() {
+                        window.location.href = data.redirectUrl;
+                    }, 1500);
+                } else {
+                    showErrorAlert(data.message);
+                    // Re-enable button
+                    confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Floor';
+                    confirmBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                forceCleanupModals();
+                console.error('Error:', error);
+                showErrorAlert('An error occurred while deleting the floor. Please try again.');
+                // Re-enable button
+                confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Floor';
+                confirmBtn.disabled = false;
+            });
+        }
+
+        function showSuccessAlert(message) {
+            const alertHtml = `
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`;
+            document.querySelector('.content-section').insertAdjacentHTML('afterbegin', alertHtml);
+        }
+
+        function showErrorAlert(message) {
+            const alertHtml = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`;
+            document.querySelector('.content-section').insertAdjacentHTML('afterbegin', alertHtml);
+        }
+    </script>
+}
+
+<style>
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+    }
+
+    .breadcrumb-link {
+        color: #3498db;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: color 0.2s ease;
+        cursor: pointer;
+    }
+
+    .breadcrumb-link:hover {
+        color: #2980b9;
+    }
+
+    .separator {
+        color: #95a5a6;
+        margin: 0 0.25rem;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .floor-grid, .floor-card, .floor-header, .floor-title, .floor-actions, .stat-item, .stat-info, .stat-value, .stat-label {
+        display: none !important;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+    }
+
+    @@media (max-width: 768px) {
+        .page-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .header-content {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+        }
+
+        .btn-success {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .page-title {
+            font-size: 1.25rem;
+        }
+
+        .floor-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .floor-title {
+            flex-direction: column;
+        }
+
+        .floor-stats {
+            width: 100%;
+            margin-top: 0.75rem;
+        }
+
+        .floor-actions {
+            grid-template-columns: 1fr;
+        }
+
+        .floor-card {
+            padding: 1rem;
+        }
+
+        .stat-item {
+            padding: 0.625rem 0.875rem;
+        }
+
+        .stat-item i {
+            font-size: 1rem;
+            padding: 0.375rem;
+        }
+
+        .stat-value {
+            font-size: 1rem;
+        }
+
+        .btn-sm {
+            padding: 0.625rem;
+            font-size: 0.875rem;
+        }
+    }
+
+    .info-list {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .info-list p {
+        margin-bottom: 0.5rem;
+        color: #17a2b8;
+        font-weight: 500;
+    }
+
+    .info-list ul {
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+
+    .info-list ul li {
+        margin-bottom: 0.5rem;
+        color: #666;
+    }
+
+    .info-list ul li:last-child {
+        margin-bottom: 0;
+    }
+
+    .warning-list {
+        background: #fff5f5;
+        border-radius: 6px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .warning-list p {
+        margin-bottom: 0.5rem;
+        color: #dc3545;
+        font-weight: 500;
+    }
+
+    .warning-list ul {
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+
+    .warning-list ul li {
+        margin-bottom: 0.5rem;
+        color: #666;
+    }
+
+    .warning-list ul li:last-child {
+        margin-bottom: 0;
+    }
+</style>

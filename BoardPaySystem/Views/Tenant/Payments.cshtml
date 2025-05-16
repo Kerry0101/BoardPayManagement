@@ -1,0 +1,78 @@
+@{
+    Layout = "_TenantLayout";
+    ViewData["Title"] = "Payment History";
+}
+
+@model IEnumerable<BoardPaySystem.Models.Bill>
+
+<div class="container mt-4">
+    <h1 class="mb-4">Payment History</h1>
+
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Completed Payments</h5>
+                </div>
+                <div class="card-body">
+                    @if (!Model.Any())
+                    {
+                        <p>You have no payment history yet.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="paymentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Bill #</th>
+                                        <th>Billing Period</th>
+                                        <th>Payment Date</th>
+                                        <th>Amount Paid</th>
+                                        <th>Reference Number</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var bill in Model)
+                                    {
+                                        <tr>
+                                            <td>@bill.BillId</td>
+                                            <td>@bill.BillingDate.ToString("MMM yyyy")</td>
+                                            <td>@(bill.PaymentDate.HasValue ? bill.PaymentDate.Value.ToString("MMM dd, yyyy") : "-")</td>
+                                            <td>@bill.TotalAmount.ToString("C")</td>
+                                            <td>@bill.PaymentReference</td>
+                                            <td>
+                                                <a asp-action="BillDetails" asp-route-id="@bill.BillId" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-eye"></i> Details
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <a asp-action="Bills" class="btn btn-primary">
+                <i class="fas fa-file-invoice-dollar"></i> View Current Bills
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#paymentsTable').DataTable({
+                "order": [[2, "desc"]]
+            });
+        });
+    </script>
+}

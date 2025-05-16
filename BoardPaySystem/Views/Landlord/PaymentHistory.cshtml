@@ -1,0 +1,116 @@
+@model BoardPaySystem.Models.PaymentHistoryViewModel
+@{
+    Layout = "_LandlordLayout";
+    ViewData["Title"] = "Payment History";
+    int currentYear = DateTime.Now.Year;
+    int minYear = currentYear - 5;
+}
+
+<div class="container py-3">
+    <ul class="nav nav-pills mb-3">
+        <li class="nav-item">
+            <a class="nav-link" href="/Landlord/MonthlyIncomeSummary?year=@(Model.Year ?? currentYear)">Monthly Income Summary</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="#">Payment History</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/Landlord/BillHistory">Bill History</a>
+        </li>
+    </ul>
+    <h4 class="mb-3"><i class="fas fa-receipt"></i> Payment History</h4>
+    <form method="get" class="row g-2 mb-3 align-items-end">
+        <div class="col-auto">
+            <label for="year" class="form-label mb-0">Year:</label>
+            <select id="year" name="year" class="form-select form-select-sm" onchange="this.form.submit()">
+                @if (Model.Year == null)
+                {
+                    <option value="" selected="selected">All</option>
+                }
+                else
+                {
+                    <option value="">All</option>
+                }
+                @for (int y = currentYear; y >= minYear; y--)
+                {
+                    if (y == Model.Year)
+                    {
+                        <option value="@y" selected="selected">@y</option>
+                    }
+                    else
+                    {
+                        <option value="@y">@y</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <label for="tenantId" class="form-label mb-0">Tenant:</label>
+            <select id="tenantId" name="tenantId" class="form-select form-select-sm" onchange="this.form.submit()">
+                @if (string.IsNullOrEmpty(Model.TenantId))
+                {
+                    <option value="" selected="selected">All</option>
+                }
+                else
+                {
+                    <option value="">All</option>
+                }
+                @foreach (var t in Model.Tenants)
+                {
+                    if (t.Id == Model.TenantId)
+                    {
+                        <option value="@t.Id" selected="selected">@t.FirstName @t.LastName</option>
+                    }
+                    else
+                    {
+                        <option value="@t.Id">@t.FirstName @t.LastName</option>
+                    }
+                }
+            </select>
+        </div>
+    </form>
+    <div class="card shadow-sm">
+        <div class="card-body p-2">
+            <div class="table-responsive">
+                <table class="table table-sm table-striped table-hover align-middle mb-0">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Date</th>
+                            <th>Tenant</th>
+                            <th>Room</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Reference</th>
+                            <th>Bill Period</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Payments.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">No payments found for the selected filters.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var p in Model.Payments)
+                            {
+                                <tr>
+                                    <td>@p.PaymentDate.ToString("yyyy-MM-dd")</td>
+                                    <td>@p.TenantName</td>
+                                    <td>@p.RoomName</td>
+                                    <td>@p.Amount.ToString("C")</td>
+                                    <td>@p.PaymentMethod</td>
+                                    <td>@p.ReferenceNumber</td>
+                                    <td>@p.BillPeriod</td>
+                                    <td>@p.Status</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div> 

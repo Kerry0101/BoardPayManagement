@@ -1,0 +1,85 @@
+﻿@using BoardPaySystem.Models
+@model List<BoardPaySystem.Models.Notification>
+
+@{
+    ViewData["Title"] = "Notifications";
+    Layout = "_TenantLayout";
+}
+
+<div class="content-section active">
+    <div class="tenant-main-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="page-title mb-0">
+                <i class="fas fa-bell"></i>
+                Notifications
+            </h3>
+            @if (Model.Any(n => !n.IsRead))
+            {
+                <form asp-action="MarkAllNotificationsAsRead" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-secondary">
+                        <i class="fas fa-check-double"></i> Mark All as Read
+                    </button>
+                </form>
+            }
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                You have no notifications.
+            </div>
+        }
+        else
+        {
+            @foreach (var notification in Model)
+            {
+                <div class="tenant-notification-card" style="background: #e3f2fd; border: 1px solid #90caf9; margin: 20px 0; padding: 18px 24px; border-radius: 8px;">
+                    <div style="display: flex; align-items: center;">
+                        @if (notification.Type == NotificationType.NewBill)
+                        {
+                            <i class="fas fa-file-invoice text-primary" style="font-size: 1.5em; margin-right: 16px;"></i>
+                        }
+                        else if (notification.Type == NotificationType.UpcomingDue)
+                        {
+                            <i class="fas fa-clock text-warning" style="font-size: 1.5em; margin-right: 16px;"></i>
+                        }
+                        else if (notification.Type == NotificationType.Overdue)
+                        {
+                            <i class="fas fa-exclamation-circle text-danger" style="font-size: 1.5em; margin-right: 16px;"></i>
+                        }
+                        else if (notification.Type == NotificationType.PaymentConfirmed)
+                        {
+                            <i class="fas fa-check-circle text-success" style="font-size: 1.5em; margin-right: 16px;"></i>
+                        }
+                        else if (notification.Type == NotificationType.BillModified)
+                        {
+                            <i class="fas fa-edit text-info" style="font-size: 1.5em; margin-right: 16px;"></i>
+                        }
+                        else
+                        {
+                            <i class="fas fa-bell text-secondary" style="font-size: 1.5em; margin-right: 16px;"></i>
+                        }
+                        <div>
+                            <div style="font-weight: bold; font-size: 1.1em;">@notification.Title</div>
+                            <div>@notification.Message</div>
+                            <div style="font-size: 0.9em; color: #888;">@notification.CreatedAt.ToString("MMM dd, yyyy HH:mm")</div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-refresh notification count every minute
+        setInterval(function() {
+            $.get('/Tenant/GetUnreadNotificationCount', function(data) {
+                $('#notification-count').text(data.count);
+            });
+        }, 60000);
+    </script>
+}

@@ -1,0 +1,705 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using BoardPaySystem.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
+using System.Linq;
+using Microsoft.AspNetCore.Authorization;
+using System;
+
+namespace BoardPaySystem.Controllers
+{
+    [Authorize(Roles = "Landlord")]
+    public class LandlordController : Controller
+    {
+        private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<LandlordController> _logger;
+
+        public LandlordController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            ILogger<LandlordController> logger)
+        {
+            _context = context;
+            _userManager = userManager;
+            _logger = logger;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            var buildings = await _context.Buildings
+                .Include(b => b.Floors)
+                .ThenInclude(f => f.Rooms)
+                .ToListAsync();
+
+            var tenants = await _userManager.GetUsersInRoleAsync("Tenant");
+
+            ViewBag.TotalBuildings = buildings.Count;
+            ViewBag.TotalFloors = buildings.Sum(b => b.Floors.Count);
+            ViewBag.TotalRooms = buildings.Sum(b => b.Floors.Sum(f => f.Rooms.Count));
+            ViewBag.TotalTenants = tenants.Count;
+            ViewBag.OccupiedRooms = buildings.Sum(b => b.Floors.Sum(f => f.Rooms.Count(r => r.IsOccupied)));
+            ViewBag.VacantRooms = ViewBag.TotalRooms - ViewBag.OccupiedRooms;
+
+            return View();
+        }
+
+        public IActionResult LandlordProfile()
+        {
+            return View();
+        }
+
+        public async Task<IActionResult> Overview()
+        {
+            try
+            {
+                // Get counts for the dashboard
+                ViewBag.BuildingsCount = await _context.Buildings.CountAsync();
+                ViewBag.FloorsCount = await _context.Floors.CountAsync();
+                ViewBag.RoomsCount = await _context.Rooms.CountAsync();
+                ViewBag.TenantsCount = (await _userManager.GetUsersInRoleAsync("Tenant")).Count;
+
+                // Room status
+                ViewBag.TotalRooms = await _context.Rooms.CountAsync();
+                ViewBag.OccupiedRooms = await _context.Rooms.Where(r => r.IsOccupied).CountAsync();
+                ViewBag.VacantRooms = ViewBag.TotalRooms - ViewBag.OccupiedRooms;
+                ViewBag.OccupancyRate = ViewBag.TotalRooms > 0 
+                    ? (ViewBag.OccupiedRooms * 100.0 / ViewBag.TotalRooms).ToString("F1") 
+                    : "0.0";
+
+                // Contracts
+                var today = DateTime.Today;
+                var thirtyDaysFromNow = today.AddDays(30);
+                ViewBag.ActiveContracts = await _context.Contracts
+                    .Where(c => c.Status == ContractStatus.Active)
+                    .CountAsync();
+                ViewBag.ExpiringContracts = await _context.Contracts
+                    .Where(c => c.Status == ContractStatus.Active && c.EndDate <= thirtyDaysFromNow)
+                    .CountAsync();
+
+                // Billing status for current month
+                var currentMonth = DateTime.Today.Month;
+                var currentYear = DateTime.Today.Year;
+                var monthlyBills = await _context.Bills
+                    .Where(b => b.BillingDate.Month == currentMonth && b.BillingDate.Year == currentYear)
+                    .ToListAsync();
+
+                ViewBag.TotalBills = monthlyBills.Count;
+                ViewBag.PaidBills = monthlyBills.Count(b => b.Status == BillStatus.Paid);
+                ViewBag.PendingBills = monthlyBills.Count(b => b.Status == BillStatus.Pending);
+                ViewBag.OverdueBills = monthlyBills.Count(b => b.Status == BillStatus.Overdue);
+
+                // Calculate total amounts
+                ViewBag.TotalBilledAmount = monthlyBills.Sum(b => b.TotalAmount).ToString("C");
+                ViewBag.TotalPaidAmount = monthlyBills
+                    .Where(b => b.Status == BillStatus.Paid)
+                    .Sum(b => b.TotalAmount)
+                    .ToString("C");
+                ViewBag.TotalPendingAmount = monthlyBills
+                    .Where(b => b.Status == BillStatus.Pending || b.Status == BillStatus.Overdue)
+                    .Sum(b => b.TotalAmount)
+                    .ToString("C");
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in Overview action: {Message}", ex.Message);
+                TempData["Error"] = "An error occurred while loading the dashboard. Please try again.";
+                return View();
+            }
+        }
+
+        public async Task<IActionResult> ManageBuildings()
+        {
+            var buildings = await _context.Buildings
+                .Select(b => new BuildingListViewModel
+                {
+                    BuildingId = b.BuildingId,
+                    BuildingName = b.BuildingName,
+                    Address = b.Address,
+                    TotalFloors = b.Floors.Count,
+                    TotalRooms = b.Floors.Sum(f => f.Rooms.Count),
+                    OccupiedRooms = b.Floors.Sum(f => f.Rooms.Count(r => r.IsOccupied))
+                })
+                .ToListAsync();
+            return View(buildings);
+        }
+
+        public async Task<IActionResult> Billing()
+        {
+            // Get all bills with related data, including building information for filtering
+            var bills = await _context.Bills
+                .Include(b => b.Tenant)
+                .Include(b => b.Room)
+                    .ThenInclude(r => r.Floor)
+                        .ThenInclude(f => f.Building)
+                .OrderByDescending(b => b.DueDate)
+                .ToListAsync();
+            
+            // Get all buildings for the filter dropdown
+            ViewBag.Buildings = await _context.Buildings.ToListAsync();
+                
+            return View(bills);
+        }
+
+        public async Task<IActionResult> AddTenant()
+        {
+            var buildings = await _context.Buildings.ToListAsync();
+            ViewBag.Buildings = buildings;
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddTenant([Bind("Username,Password,FirstName,LastName,PhoneNumber,BuildingId,RoomId,StartDate")] CreateTenantViewModel model)
+        {
+            try
+            {
+                _logger.LogInformation("Starting AddTenant action with data: FirstName={FirstName}, LastName={LastName}, Username={Username}, RoomId={RoomId}, StartDate={StartDate}",
+                    model.FirstName, model.LastName, model.Username, model.RoomId, model.StartDate.ToString("yyyy-MM-dd"));
+
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state when adding tenant");
+                    ViewBag.Buildings = await _context.Buildings.ToListAsync();
+                    return View(model);
+                }
+
+                // Validate and update the room
+                var room = await _context.Rooms
+                    .Include(r => r.CurrentTenant)
+                    .Include(r => r.Floor)
+                    .FirstOrDefaultAsync(r => r.RoomId == model.RoomId);
+
+                if (room == null)
+                {
+                    _logger.LogError("Room with ID {RoomId} not found", model.RoomId);
+                    ModelState.AddModelError("RoomId", "Selected room not found.");
+                    ViewBag.Buildings = await _context.Buildings.ToListAsync();
+                    return View(model);
+                }
+
+                if (room.IsOccupied || room.CurrentTenant != null)
+                {
+                    _logger.LogWarning("Room {RoomId} is already occupied", model.RoomId);
+                    ModelState.AddModelError("RoomId", "This room is already occupied.");
+                    ViewBag.Buildings = await _context.Buildings.ToListAsync();
+                    return View(model);
+                }
+
+                // Create the user
+                var user = new ApplicationUser
+                {
+                    UserName = model.Username,
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+                    PhoneNumber = model.PhoneNumber,
+                    RoomId = model.RoomId,
+                    BuildingId = room.Floor.BuildingId,
+                    StartDate = model.StartDate
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(user, "Tenant");
+                    _logger.LogInformation("User created successfully with ID {UserId}, StartDate {StartDate}", user.Id, user.StartDate.ToString("yyyy-MM-dd"));
+
+                    // Update the room
+                    room.IsOccupied = true;
+                    room.CurrentTenant = user;
+                    _context.Update(room);
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("Room {RoomId} updated with tenant {UserId}", room.RoomId, user.Id);
+
+                    // Generate initial bill for the tenant
+                    await GenerateInitialBillForTenant(user.Id);
+                    _logger.LogInformation("Initial bill generated for tenant {UserId}", user.Id);
+
+                    TempData["Success"] = "Tenant added successfully!";
+                    return RedirectToAction(nameof(ManageTenants));
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError("", error.Description);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding tenant: {ErrorMessage}", ex.Message);
+                ModelState.AddModelError("", "Error adding tenant. Please try again.");
+            }
+
+            ViewBag.Buildings = await _context.Buildings.ToListAsync();
+            return View(model);
+        }
+
+        // Helper method to generate initial bill for a new tenant
+        private async Task GenerateInitialBillForTenant(string tenantId)
+        {
+            try
+            {
+                // Get the tenant with room and building information
+                var tenant = await _context.Users
+                    .Include(u => u.Room)
+                        .ThenInclude(r => r.Floor)
+                            .ThenInclude(f => f.Building)
+                    .FirstOrDefaultAsync(u => u.Id == tenantId);
+                    
+                if (tenant == null || tenant.Room == null || tenant.Room.Floor == null || tenant.Room.Floor.Building == null)
+                {
+                    _logger.LogError("Cannot generate initial bill: Tenant {TenantId}, room, or building information not found", tenantId);
+                    return;
+                }
+                
+                var building = tenant.Room.Floor.Building;
+                var today = DateTime.Today;
+                var firstDayOfMonth = new DateTime(today.Year, today.Month, 1);
+                
+                // Create the bill with proper property names
+                var bill = new Bill
+                {
+                    TenantId = tenantId,
+                    RoomId = tenant.Room.RoomId,
+                    BillingDate = firstDayOfMonth,
+                    DueDate = new DateTime(today.Year, today.Month, tenant.StartDate.Day),
+                    MonthlyRent = tenant.Room.CustomMonthlyRent ?? building.DefaultMonthlyRent,
+                    WaterFee = tenant.Room.CustomWaterFee ?? building.DefaultWaterFee,
+                    ElectricityFee = 0, // Will be calculated based on meter readings
+                    WifiFee = tenant.Room.CustomWifiFee ?? building.DefaultWifiFee,
+                    Status = BillStatus.NotPaid,
+                    Notes = "Initial bill generated on " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                };
+                
+                _context.Bills.Add(bill);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Initial bill {BillId} created for tenant {TenantId}", bill.BillId, tenantId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating initial bill for tenant {TenantId}: {ErrorMessage}", tenantId, ex.Message);
+            }
+        }
+
+        public async Task<IActionResult> ManageTenants()
+        {
+            try
+            {
+                // First, get the IDs of all users with the 'Tenant' role
+                var tenantUsers = await _userManager.GetUsersInRoleAsync("Tenant");
+                var tenantIds = tenantUsers.Select(t => t.Id).ToList();
+                
+                // Then query the users with those IDs and include related data
+                var tenantsWithDetails = await _context.Users
+                    .Where(u => tenantIds.Contains(u.Id))
+                    .Include(u => u.Room)
+                    .ToListAsync();
+
+                // Load additional data for each tenant
+                foreach (var tenant in tenantsWithDetails)
+                {
+                    if (tenant.Room != null)
+                    {
+                        // Load the Floor explicitly
+                        await _context.Entry(tenant.Room)
+                            .Reference(r => r.Floor)
+                            .LoadAsync();
+                        
+                        // If Floor exists, load its Building
+                        if (tenant.Room.Floor != null)
+                        {
+                            await _context.Entry(tenant.Room.Floor)
+                                .Reference(f => f.Building)
+                                .LoadAsync();
+                        }
+                    }
+                }
+
+                ViewBag.Buildings = await _context.Buildings.ToListAsync();
+                return View(tenantsWithDetails);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in ManageTenants: {Message}", ex.Message);
+                TempData["Error"] = "An error occurred while loading tenants. Please try again.";
+                return RedirectToAction("Index");
+            }
+        }
+
+        public IActionResult MeterReadings()
+        {
+            return View();
+        }
+
+        public IActionResult Reports()
+        {
+            return View();
+        }
+
+        public IActionResult AddBuilding()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddBuilding(Building building)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Buildings.Add(building);
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Building added successfully!";
+                    return RedirectToAction(nameof(ManageBuildings));
+                }
+                catch (Exception)
+                {
+                    ModelState.AddModelError("", "Error adding building. Please try again.");
+                }
+            }
+            return View(building);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteBuilding(int id)
+        {
+            try
+            {
+                // First, load the building with its related entities
+                var building = await _context.Buildings
+                    .Include(b => b.Floors)
+                        .ThenInclude(f => f.Rooms)
+                            .ThenInclude(r => r.CurrentTenant)
+                    .Include(b => b.Tenants)
+                    .FirstOrDefaultAsync(b => b.BuildingId == id);
+
+                if (building == null)
+                {
+                    return Json(new { success = false, message = "Building not found." });
+                }
+
+                // Check if there are any tenants associated with this building
+                if (building.Tenants != null && building.Tenants.Any())
+                {
+                    return Json(new { success = false, message = "Cannot delete building with active tenants. Please reassign or delete tenants first." });
+                }
+
+                // Check if any rooms have tenants
+                var roomsWithTenants = building.Floors
+                    .SelectMany(f => f.Rooms)
+                    .Where(r => r.CurrentTenant != null)
+                    .ToList();
+
+                if (roomsWithTenants.Any())
+                {
+                    return Json(new { success = false, message = "Cannot delete building with occupied rooms. Please remove tenants first." });
+                }
+
+                // Handle rooms first - delete any associated objects 
+                var rooms = building.Floors.SelectMany(f => f.Rooms).ToList();
+                foreach (var room in rooms)
+                {
+                    // Delete any bills associated with this room
+                    var bills = await _context.Bills.Where(b => b.RoomId == room.RoomId).ToListAsync();
+                    if (bills.Any())
+                    {
+                        _context.Bills.RemoveRange(bills);
+                    }
+
+                    // Delete any contracts associated with this room
+                    var contracts = await _context.Contracts.Where(c => c.RoomId == room.RoomId).ToListAsync();
+                    if (contracts.Any())
+                    {
+                        _context.Contracts.RemoveRange(contracts);
+                    }
+
+                    // Try to delete meter readings, but handle if table doesn't exist
+                    try
+                    {
+                        var meterReadings = await _context.MeterReadings.Where(m => m.RoomId == room.RoomId).ToListAsync();
+                        if (meterReadings.Any())
+                        {
+                            _context.MeterReadings.RemoveRange(meterReadings);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log but continue if MeterReadings table doesn't exist yet
+                        _logger.LogWarning("Could not delete meter readings: {ErrorMessage}", ex.Message);
+                    }
+                }
+
+                // Save any changes before proceeding
+                await _context.SaveChangesAsync();
+
+                // Now remove rooms
+                foreach (var room in rooms)
+                {
+                    _context.Rooms.Remove(room);
+                }
+                await _context.SaveChangesAsync();
+
+                // Now remove floors
+                foreach (var floor in building.Floors)
+                {
+                    _context.Floors.Remove(floor);
+                }
+                await _context.SaveChangesAsync();
+
+                // Finally remove the building
+                _context.Buildings.Remove(building);
+                await _context.SaveChangesAsync();
+                
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting building: {ErrorMessage}", ex.Message);
+                return Json(new { success = false, message: "Error deleting building: " + ex.Message });
+            }
+        }
+
+        public async Task<IActionResult> EditBuilding(int id)
+        {
+            var building = await _context.Buildings.FindAsync(id);
+            if (building == null)
+            {
+                return NotFound();
+            }
+            return View(building);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditBuilding(int id, Building building)
+        {
+            if (id != building.BuildingId)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var existingBuilding = await _context.Buildings.AsNoTracking().FirstOrDefaultAsync(b => b.BuildingId == id);
+                    if (existingBuilding == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Check if any changes were actually made
+                    if (existingBuilding.BuildingName == building.BuildingName &&
+                        existingBuilding.Address == building.Address &&
+                        existingBuilding.DefaultMonthlyRent == building.DefaultMonthlyRent &&
+                        existingBuilding.DefaultWaterFee == building.DefaultWaterFee &&
+                        existingBuilding.DefaultElectricityFee == building.DefaultElectricityFee &&
+                        existingBuilding.DefaultWifiFee == building.DefaultWifiFee &&
+                        existingBuilding.LateFee == building.LateFee)
+                    {
+                        // No changes were made
+                        TempData["Info"] = "No changes were made to the building.";
+                        return RedirectToAction(nameof(ManageBuildings));
+                    }
+
+                    _context.Update(building);
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Building updated successfully!";
+                    return RedirectToAction(nameof(ManageBuildings));
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!await _context.Buildings.AnyAsync(b => b.BuildingId == id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("", "Error updating building. Please try again.");
+                    }
+                }
+            }
+            return View(building);
+        }
+
+        public async Task<IActionResult> EditTenant(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return NotFound();
+            }
+
+            var tenant = await _userManager.FindByIdAsync(id);
+            if (tenant == null)
+            {
+                return NotFound();
+            }
+
+            var isTenant = await _userManager.IsInRoleAsync(tenant, "Tenant");
+            if (!isTenant)
+            {
+                return NotFound();
+            }
+
+            return View(tenant);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditTenant(string id, ApplicationUser tenant)
+        {
+            if (id != tenant.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var existingTenant = await _userManager.FindByIdAsync(id);
+                    var isTenant = await _userManager.IsInRoleAsync(existingTenant, "Tenant");
+                    
+                    if (existingTenant == null || !isTenant)
+                    {
+                        return NotFound();
+                    }
+
+                    // Check if any changes were made
+                    if (existingTenant.FirstName == tenant.FirstName &&
+                        existingTenant.LastName == tenant.LastName &&
+                        existingTenant.PhoneNumber == tenant.PhoneNumber &&
+                        existingTenant.StartDate == tenant.StartDate)
+                    {
+                        TempData["Info"] = "No changes were made to the tenant.";
+                        return RedirectToAction(nameof(ManageTenants));
+                    }
+
+                    existingTenant.FirstName = tenant.FirstName;
+                    existingTenant.LastName = tenant.LastName;
+                    existingTenant.PhoneNumber = tenant.PhoneNumber;
+                    existingTenant.StartDate = tenant.StartDate;
+                    
+                    _logger.LogInformation("Updating tenant {Id} with StartDate {StartDate}", 
+                        existingTenant.Id, existingTenant.StartDate.ToString("yyyy-MM-dd"));
+
+                    var result = await _userManager.UpdateAsync(existingTenant);
+                    if (result.Succeeded)
+                    {
+                        TempData["Success"] = "Tenant updated successfully!";
+                        return RedirectToAction(nameof(ManageTenants));
+                    }
+
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError("", error.Description);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error updating tenant: {ErrorMessage}", ex.Message);
+                    ModelState.AddModelError("", "Error updating tenant. Please try again.");
+                }
+            }
+            return View(tenant);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteTenant(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return Json(new { success = false, message = "Invalid tenant ID." });
+            }
+
+            try
+            {
+                var tenant = await _userManager.FindByIdAsync(id);
+                if (tenant == null)
+                {
+                    return Json(new { success = false, message = "Tenant not found." });
+                }
+
+                var isTenant = await _userManager.IsInRoleAsync(tenant, "Tenant");
+                if (!isTenant)
+                {
+                    return Json(new { success = false, message = "User is not a tenant." });
+                }
+
+                // Delete bills
+                var bills = await _context.Bills.Where(b => b.TenantId == id).ToListAsync();
+                _context.Bills.RemoveRange(bills);
+                
+                // Delete contracts
+                var contracts = await _context.Contracts.Where(c => c.TenantId == id).ToListAsync();
+                _context.Contracts.RemoveRange(contracts);
+                
+                await _context.SaveChangesAsync();
+
+                // Update the room
+                if (tenant.RoomId.HasValue)
+                {
+                    var room = await _context.Rooms.FindAsync(tenant.RoomId.Value);
+                    if (room != null)
+                    {
+                        room.IsOccupied = false;
+                        room.CurrentTenant = null;
+                        _context.Update(room);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                // Delete the tenant
+                var result = await _userManager.DeleteAsync(tenant);
+                if (result.Succeeded)
+                {
+                    return Json(new { success = true });
+                }
+
+                return Json(new { success = false, message = "Error deleting tenant." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error when deleting tenant: " + ex.Message);
+                return Json(new { success = false, message = "Error deleting tenant." });
+            }
+        }
+
+        public async Task<IActionResult> BuildingDetails(int id)
+        {
+            var building = await _context.Buildings
+                .Include(b => b.Floors)
+                .ThenInclude(f => f.Rooms)
+                .FirstOrDefaultAsync(b => b.BuildingId == id);
+
+            if (building == null)
+            {
+                return NotFound();
+            }
+
+            return View(building);
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> GetFloors(int id)
+        {
+            _logger.LogInformation("GetFloors called with id={id}", id);
+
+            var floors = await _context.Floors
+                .Where(f => f.BuildingId == id)
+                .OrderBy(f => f.FloorNumber)
+                .Select(f => new {
+                    FloorId = f.FloorId,
+                    displayName = $"{f.FloorName} (Floor {f.FloorNumber})"
+                })
+                .ToListAsync();
+
+            _logger.LogInformation("Found {count} floors for building {id}", floors.Count, id);
+
+            return Json(new { success = true, data = floors });
+        }
+    }
+}

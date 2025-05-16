@@ -1,0 +1,124 @@
+@model BoardPaySystem.Models.MonthlyIncomeSummaryViewModel
+@{
+    Layout = "_LandlordLayout";
+    ViewData["Title"] = "Monthly Income Summary";
+    var months = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthNames;
+    int currentYear = DateTime.Now.Year;
+    int minYear = currentYear - 5; // Show last 5 years
+}
+
+<div class="container py-3">
+    <ul class="nav nav-pills mb-3">
+        <li class="nav-item">
+            <a class="nav-link active" href="#">Monthly Income Summary</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/Landlord/PaymentHistory">Payment History</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/Landlord/BillHistory">Bill History</a>
+        </li>
+    </ul>
+    <h4 class="mb-3"><i class="fas fa-chart-line"></i> Monthly Income Summary - @Model.Year</h4>
+    <form method="get" class="mb-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-auto">
+                <label for="year" class="form-label mb-0">Year:</label>
+                <select id="year" name="year" class="form-select form-select-sm" style="width:auto;display:inline-block;" onchange="this.form.submit()">
+                    @for (int y = currentYear; y >= minYear; y--)
+                    {
+                        if (y == Model.Year)
+                        {
+                            <option value="@y" selected="selected">@y</option>
+                        }
+                        else
+                        {
+                            <option value="@y">@y</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+    </form>
+    <div class="row mb-3">
+        <div class="col-6 col-md-2 mb-2">
+            <div class="card text-white bg-primary text-center shadow-sm">
+                <div class="card-body p-2">
+                    <div class="small">Total Billed</div>
+                    <div class="fw-bold fs-5">@Model.TotalBilled.ToString("C")</div>
+                </div>
+            </div>
+        </div>
+        <!-- <div class="col-6 col-md-2 mb-2">
+            <div class="card text-white bg-success text-center shadow-sm">
+                <div class="card-body p-2">
+                    <div class="small">Total Collected</div>
+                    <div class="fw-bold fs-5">@Model.TotalCollected.ToString("C")</div>
+                </div>
+            </div>
+        </div> -->
+        <div class="col-6 col-md-2 mb-2">
+            <div class="card text-dark bg-warning text-center shadow-sm">
+                <div class="card-body p-2">
+                    <div class="small">Outstanding</div>
+                    <div class="fw-bold fs-5">@Model.TotalOutstanding.ToString("C")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2 mb-2">
+            <div class="card text-white bg-danger text-center shadow-sm">
+                <div class="card-body p-2">
+                    <div class="small">Overdue</div>
+                    <div class="fw-bold fs-5">@Model.TotalOverdue.ToString("C")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2 mb-2">
+            <div class="card text-white bg-secondary text-center shadow-sm">
+                <div class="card-body p-2">
+                    <div class="small">Written Off</div>
+                    <div class="fw-bold fs-5">@Model.TotalWrittenOff.ToString("C")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2 mb-2">
+            <div class="card text-white bg-info text-center shadow-sm">
+                <div class="card-body p-2">
+                    <div class="small">Total Income</div>
+                    <div class="fw-bold fs-5">@Model.TotalIncome.ToString("C")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card shadow-sm">
+        <div class="card-body p-2">
+            <div class="table-responsive">
+                <table class="table table-sm table-striped table-hover align-middle mb-0">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Month</th>
+                            <th>Billed</th>
+                            <th>Collected</th>
+                            <th>Outstanding</th>
+                            <th>Overdue</th>
+                            <th>Written Off</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Rows)
+                        {
+                            <tr>
+                                <td>@months[row.Month - 1] @row.Year</td>
+                                <td>@row.Billed.ToString("C")</td>
+                                <td>@row.Collected.ToString("C")</td>
+                                <td>@row.Outstanding.ToString("C")</td>
+                                <td>@row.Overdue.ToString("C")</td>
+                                <td>@row.WrittenOff.ToString("C")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div> 

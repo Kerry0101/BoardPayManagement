@@ -1,0 +1,80 @@
+@model IEnumerable<BoardPaySystem.Models.MeterReading>
+@{
+    ViewData["Title"] = "Tenant Meter Reading History";
+    Layout = "_LandlordLayout";
+    var tenant = ViewBag.Tenant as BoardPaySystem.Models.ApplicationUser;
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0"><i class="fas fa-history"></i> Meter Reading History for @tenant?.FirstName @tenant?.LastName</h3>
+        <a href="/MeterReading/Create" class="btn btn-primary"><i class="fas fa-plus"></i> Read Again</a>
+    </div>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Previous (kWh)</th>
+                            <th>Current (kWh)</th>
+                            <th>Usage (kWh)</th>
+                            <th>Rate (₱)</th>
+                            <th>Charge (₱)</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var reading in Model.OrderByDescending(r => r.ReadingDate))
+                        {
+                            <tr>
+                                <td>@reading.ReadingDate.ToString("yyyy-MM-dd")</td>
+                                <td>@reading.PreviousReading</td>
+                                <td>@reading.CurrentReading</td>
+                                <td>@reading.UsageKwh</td>
+                                <td>@reading.RatePerKwh</td>
+                                <td>@reading.TotalCharge.ToString("C")</td>
+                                <td>@reading.Notes</td>
+                                <td>
+                                    @if (reading.BillId == null)
+                                    {
+                                        <button class="btn btn-danger btn-sm delete-reading-btn" data-reading-id="@reading.ReadingId"><i class="fas fa-trash"></i> Delete</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    $(function() {
+        $('.delete-reading-btn').on('click', function() {
+            if (!confirm('Are you sure you want to delete this meter reading?')) return;
+            var btn = $(this);
+            var readingId = btn.data('reading-id');
+            $.ajax({
+                url: '/MeterReading/Delete/' + readingId,
+                type: 'POST',
+                data: { __RequestVerificationToken: $('input[name=__RequestVerificationToken]').val() },
+                success: function(resp) {
+                    if (resp.success) {
+                        btn.closest('tr').fadeOut(400, function() { $(this).remove(); });
+                    } else {
+                        alert(resp.message || 'Failed to delete reading.');
+                    }
+                },
+                error: function() {
+                    alert('Error deleting reading.');
+                }
+            });
+        });
+    });
+</script>
+} 

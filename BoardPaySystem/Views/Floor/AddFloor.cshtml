@@ -1,0 +1,467 @@
+@model BoardPaySystem.Models.Floor
+@{
+    ViewData["Title"] = "Add New Floor";
+    Layout = "_LandlordLayout";
+    var building = ViewBag.Building as BoardPaySystem.Models.Building;
+    if (building == null)
+    {
+        throw new InvalidOperationException("Building data is required");
+    }
+}
+
+<div class="content-section">
+    <div class="breadcrumb">
+        <a asp-controller="Landlord" asp-action="ManageBuildings">
+            <i class="fas fa-building"></i>
+            Buildings
+        </a> >
+        <a asp-controller="Floor" asp-action="ManageFloors" asp-route-buildingId="@building.BuildingId">
+            <i class="fas fa-hotel"></i>
+            @building.BuildingName
+        </a> >
+        <span>Add New Floor</span>
+    </div>
+
+    <h3><i class="fas fa-plus-circle"></i> Add New Floor to @building.BuildingName</h3>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i>
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i>
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <form asp-action="AddFloor" method="post" id="addFloorForm" class="needs-validation" novalidate>
+        @Html.AntiForgeryToken()
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        <input type="hidden" asp-for="BuildingId" />
+        
+        <div class="form-grid">
+            <div class="form-group">
+                <label asp-for="FloorName">Floor Name <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                    <input asp-for="FloorName" class="form-control" placeholder="e.g., Ground Floor, First Floor" required />
+                </div>
+                <span asp-validation-for="FloorName" class="text-danger"></span>
+                <small class="form-text text-muted">
+                    <i class="fas fa-info-circle"></i>
+                    Enter a descriptive name for the floor
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="FloorNumber">Floor Number <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                    <input asp-for="FloorNumber" class="form-control" type="number" required 
+                           placeholder="0 for Ground Floor, 1 for First Floor" />
+                </div>
+                <span asp-validation-for="FloorNumber" class="text-danger"></span>
+                <small class="form-text text-muted">
+                    <i class="fas fa-info-circle"></i>
+                    Enter a number for sorting (e.g., 0 for Ground Floor, 1 for First Floor)
+                </small>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button type="submit" class="btn-success" id="submitButton">
+                <i class="fas fa-plus"></i> Add Floor
+            </button>
+            <a href="#" class="btn-secondary" onclick="confirmCancel()">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Add Confirmation Modal -->
+<div class="modal fade" id="addConfirmModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="addConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addConfirmModalLabel">
+                    <i class="fas fa-exclamation-circle text-warning"></i>
+                    Confirm Add Floor
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to add this floor?</p>
+                <div id="floorDetails" class="mt-3">
+                    <p class="fw-bold mb-2">Floor Details:</p>
+                    <ul id="detailsList" class="list-unstyled">
+                        <!-- Details will be listed here dynamically -->
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    No, Cancel
+                </button>
+                <button type="button" class="btn-success" onclick="submitForm()">
+                    <i class="fas fa-plus"></i>
+                    Yes, Add Floor
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Confirmation Modal -->
+<div class="modal fade" id="cancelConfirmModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="cancelConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="cancelConfirmModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Warning: Unsaved Changes
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle"></i>
+                    You have unsaved changes that will be lost if you cancel.
+                </div>
+                <div id="cancelDetails" class="mt-3">
+                    <p class="fw-bold mb-2">Current Floor Details:</p>
+                    <ul id="cancelDetailsList" class="list-unstyled">
+                        <!-- Details will be listed here dynamically -->
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-arrow-left"></i>
+                    Continue Editing
+                </button>
+                <a asp-action="ManageFloors" asp-route-buildingId="@building.BuildingId" class="btn-danger">
+                    <i class="fas fa-times"></i>
+                    Discard Changes
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        let activeModal = null;
+
+        // Function to force cleanup all modal-related elements and styles
+        function forceCleanupModals() {
+            // Remove all modal backdrops first
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => {
+                backdrop.classList.remove('show');
+                backdrop.remove();
+            });
+
+            // Clean up body
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+
+            // Reset all modals
+            document.querySelectorAll('.modal').forEach(modal => {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.dispose();
+                }
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+                modal.removeAttribute('aria-modal');
+                modal.removeAttribute('role');
+            });
+
+            // Force remove any remaining backdrop
+            const remainingBackdrops = document.querySelectorAll('.modal-backdrop');
+            remainingBackdrops.forEach(backdrop => backdrop.remove());
+
+            // Reset active modal
+            activeModal = null;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const modals = [
+                'addConfirmModal',
+                'cancelConfirmModal'
+            ];
+
+            // Initial cleanup
+            forceCleanupModals();
+
+            modals.forEach(modalId => {
+                const modalElement = document.getElementById(modalId);
+                if (!modalElement) return;
+
+                // Initialize modal with specific options
+                const modal = new bootstrap.Modal(modalElement, {
+                    backdrop: false // Disable Bootstrap's backdrop handling
+                });
+
+                // Handle modal events
+                modalElement.addEventListener('hidden.bs.modal', forceCleanupModals);
+                modalElement.addEventListener('show.bs.modal', function() {
+                    if (activeModal) {
+                        activeModal.hide();
+                        forceCleanupModals();
+                    }
+                    activeModal = modal;
+                });
+            });
+
+            // Handle clicks outside modals
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    forceCleanupModals();
+                }
+            });
+
+            // Handle escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    forceCleanupModals();
+                }
+            });
+
+            var $form = $("#addFloorForm");
+            
+            $form.validate({
+                rules: {
+                    FloorName: {
+                        required: true,
+                        maxlength: 50
+                    },
+                    FloorNumber: {
+                        required: true
+                    }
+                },
+                messages: {
+                    FloorName: {
+                        required: "Please enter a floor name",
+                        maxlength: "Floor name cannot exceed 50 characters"
+                    },
+                    FloorNumber: {
+                        required: "Please enter a floor number"
+                    }
+                },
+                errorElement: "span",
+                errorClass: "text-danger"
+            });
+
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+
+            // Ensure floor number is non-negative and a whole number
+            $('#FloorNumber').on('input', function() {
+                var value = $(this).val();
+                if (value.includes('.')) $(this).val(Math.floor(value));
+            });
+        });
+
+        function showModal(modalId) {
+            forceCleanupModals();
+            const modalElement = document.getElementById(modalId);
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: false
+            });
+            modal.show();
+            activeModal = modal;
+        }
+
+        function getFloorDetails() {
+            const floorName = $("#FloorName").val();
+            const floorNumber = $("#FloorNumber").val();
+            return [
+                `Floor Name: "${floorName}"`,
+                `Floor Number: ${floorNumber}`
+            ];
+        }
+
+        function confirmAdd() {
+            if (!$("#addFloorForm").valid()) {
+                return;
+            }
+
+            // Update the details list in the modal
+            const detailsList = document.getElementById('detailsList');
+            const details = getFloorDetails();
+            detailsList.innerHTML = details.map(detail => 
+                `<li><i class="fas fa-check text-success"></i> ${detail}</li>`
+            ).join('');
+
+            showModal('addConfirmModal');
+        }
+
+        function confirmCancel() {
+            const details = getFloorDetails();
+            if (details.some(d => d.split(': ')[1] !== '""' && d.split(': ')[1] !== '')) {
+                // Update the details list in the cancel modal
+                const cancelDetailsList = document.getElementById('cancelDetailsList');
+                cancelDetailsList.innerHTML = details.map(detail => 
+                    `<li class="mb-2">
+                        <i class="fas fa-times-circle text-danger"></i>
+                        ${detail}
+                    </li>`
+                ).join('');
+                showModal('cancelConfirmModal');
+            } else {
+                window.location.href = '@Url.Action("ManageFloors", new { buildingId = building.BuildingId })';
+            }
+        }
+
+        function submitForm() {
+            forceCleanupModals();
+            $("#addFloorForm").submit();
+        }
+    </script>
+}
+
+<style>
+    /* Base styles */
+    .content-section {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .breadcrumb {
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+    }
+
+    .breadcrumb a {
+        color: #3498db;
+        text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+        color: #2980b9;
+    }
+
+    h3 {
+        margin-bottom: 2rem;
+        color: #2c3e50;
+    }
+
+    h3 i {
+        margin-right: 0.5rem;
+        color: #3498db;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .form-group {
+        margin-bottom: 0;
+    }
+
+    .input-group {
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        overflow: hidden;
+    }
+
+    .input-group-text {
+        background-color: #f8f9fa;
+        border: none;
+        color: #6c757d;
+    }
+
+    .form-control {
+        border: none;
+        padding: 0.75rem;
+    }
+
+    .form-control:focus {
+        box-shadow: none;
+        border-color: #3498db;
+    }
+
+    .form-text {
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn-success, .btn-secondary {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-success {
+        background-color: #2ecc71;
+        color: white;
+        border: none;
+    }
+
+    .btn-success:hover {
+        background-color: #27ae60;
+    }
+
+    .btn-secondary {
+        background-color: #95a5a6;
+        color: white;
+        border: none;
+    }
+
+    .btn-secondary:hover {
+        background-color: #7f8c8d;
+    }
+
+    .is-invalid {
+        border-color: #dc3545;
+    }
+
+    .is-valid {
+        border-color: #28a745;
+    }
+
+    /* Responsive styles */
+    @@media screen and (max-width: 768px) {
+        .content-section {
+            padding: 1rem;
+        }
+
+        .button-group {
+            flex-direction: column;
+        }
+
+        .btn-success, .btn-secondary {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style> 

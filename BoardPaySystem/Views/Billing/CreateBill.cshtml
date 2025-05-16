@@ -1,0 +1,38 @@
+@model BoardPaySystem.Models.Bill
+@{
+    ViewData["Title"] = "Create Bill";
+    Layout = "_LandlordLayout";
+}
+<div class="alert alert-warning mt-5">
+    <h4><i class="fas fa-info-circle"></i> Manual bill creation is disabled</h4>
+    <p>Manual bill creation has been removed from the system. All regular and special bills are now handled automatically by the system's auto-generation process.</p>
+    <a asp-action="Billing" asp-controller="Landlord" class="btn btn-primary mt-3">Back to Billing & Payments</a>
+</div>
+
+@section Scripts {
+<script>
+    // Room fees from backend
+    let roomFees = {};
+    @if (ViewBag.RoomFees != null)
+    {
+        foreach (var kvp in (Dictionary<int, Dictionary<string, decimal>>)ViewBag.RoomFees)
+        {
+            <text>roomFees[@kvp.Key] = { MonthlyRent: @kvp.Value["MonthlyRent"], WaterFee: @kvp.Value["WaterFee"], ElectricityFee: @kvp.Value["ElectricityFee"], WifiFee: @kvp.Value["WifiFee"] };</text>
+        }
+    }
+    document.getElementById('RoomId').addEventListener('change', function() {
+        var roomId = this.value;
+        if (roomFees[roomId]) {
+            document.getElementById('MonthlyRent').value = roomFees[roomId].MonthlyRent;
+            document.getElementById('WaterFee').value = roomFees[roomId].WaterFee;
+            document.getElementById('ElectricityFee').value = roomFees[roomId].ElectricityFee;
+            document.getElementById('WifiFee').value = roomFees[roomId].WifiFee;
+        } else {
+            document.getElementById('MonthlyRent').value = '';
+            document.getElementById('WaterFee').value = '';
+            document.getElementById('ElectricityFee').value = '';
+            document.getElementById('WifiFee').value = '';
+        }
+    });
+</script>
+} 

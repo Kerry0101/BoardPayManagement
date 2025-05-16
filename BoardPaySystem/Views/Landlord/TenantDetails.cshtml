@@ -1,0 +1,386 @@
+@model BoardPaySystem.Models.ApplicationUser
+@{
+    ViewData["Title"] = "Tenant Details";
+    Layout = "_LandlordLayout";
+    var buildings = ViewBag.Buildings as List<BoardPaySystem.Models.Building> ?? new List<BoardPaySystem.Models.Building>();
+    // Prepare a minimal, loop-free structure for buildings/floors/rooms
+    var minimalBuildings = buildings.Select(b => new {
+        BuildingId = b.BuildingId,
+        BuildingName = b.BuildingName,
+        Floors = b.Floors?.Select(f => new {
+            FloorId = f.FloorId,
+            FloorName = f.FloorName,
+            Rooms = f.Rooms?.Select(r => new {
+                RoomId = r.RoomId,
+                RoomNumber = r.RoomNumber,
+                IsOccupied = r.IsOccupied
+            })
+        })
+    });
+}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="card shadow border-0 mb-4">
+                <div class="card-body p-4">
+                    <h2 class="fw-bold mb-3 text-primary d-flex align-items-center">
+                        <i class="fas fa-user me-2"></i> Tenant Details
+                    </h2>
+                    <hr>
+                    <form autocomplete="off">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Name</label>
+                                    <input type="text" class="form-control" value="@Model.FirstName @Model.LastName" readonly tabindex="-1">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Username</label>
+                                    <input type="text" class="form-control" value="@Model.UserName" readonly tabindex="-1">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Phone</label>
+                                    <input type="text" class="form-control" value="@Model.PhoneNumber" readonly tabindex="-1">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Building</label>
+                                    <input type="text" class="form-control" value="@((Model.CurrentRoom != null && Model.CurrentRoom.Floor != null && Model.CurrentRoom.Floor.Building != null) ? Model.CurrentRoom.Floor.Building.BuildingName : "Not Assigned")" readonly tabindex="-1">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Floor</label>
+                                    <input type="text" class="form-control" value="@((Model.CurrentRoom != null && Model.CurrentRoom.Floor != null) ? Model.CurrentRoom.Floor.FloorName : "Not Assigned")" readonly tabindex="-1">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Room</label>
+                                    <input type="text" class="form-control" value="@((Model.CurrentRoom != null) ? Model.CurrentRoom.RoomNumber : "Not Assigned")" readonly tabindex="-1">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Start Date</label>
+                                    <input type="text" class="form-control" value="@Model.StartDate.ToShortDateString()" readonly tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="d-flex gap-2 mt-4">
+                        <button class="btn btn-primary" onclick="showEditModal()"><i class="fas fa-edit me-1"></i> Edit</button>
+                        <button class="btn btn-warning" onclick="showMoveModal()"><i class="fas fa-random me-1"></i> Move</button>
+                        <a asp-action="ManageTenants" class="btn btn-secondary">Back</a>
+                    </div>
+                    <div id="tenant-success-message" class="alert alert-success mt-3 d-none"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Edit Modal -->
+<div class="modal fade" id="editTenantModal" tabindex="-1" aria-labelledby="editTenantLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editTenantLabel"><i class="fas fa-edit me-2"></i>Edit Tenant</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-tenant-form" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label for="edit-firstname" class="form-label">First Name</label>
+                        <input type="text" id="edit-firstname" class="form-control" value="@Model.FirstName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-lastname" class="form-label">Last Name</label>
+                        <input type="text" id="edit-lastname" class="form-control" value="@Model.LastName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-username" class="form-label">Username</label>
+                        <input type="text" id="edit-username" class="form-control" value="@Model.UserName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-password" class="form-label">Password (leave blank to keep current)</label>
+                        <div style="position:relative;">
+                            <input type="password" id="edit-password" class="form-control" autocomplete="new-password">
+                            <span class="toggle-password" onclick="togglePasswordVisibility('edit-password', 'editPasswordEye1')" style="position:absolute;top:50%;right:12px;transform:translateY(-50%);cursor:pointer;">
+                                <i id="editPasswordEye1" class="fa fa-eye"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-confirm-password" class="form-label">Confirm Password</label>
+                        <div style="position:relative;">
+                            <input type="password" id="edit-confirm-password" class="form-control" autocomplete="new-password">
+                            <span class="toggle-password" onclick="togglePasswordVisibility('edit-confirm-password', 'editPasswordEye2')" style="position:absolute;top:50%;right:12px;transform:translateY(-50%);cursor:pointer;">
+                                <i id="editPasswordEye2" class="fa fa-eye"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-phone" class="form-label">Phone</label>
+                        <input type="tel" id="edit-phone" class="form-control" value="@Model.PhoneNumber" required>
+                    </div>
+                    @* <div class="mb-3">
+                        <label for="edit-startdate" class="form-label">Start Date</label>
+                        <input type="date" id="edit-startdate" class="form-control" value="@Model.StartDate.ToString("yyyy-MM-dd")" required>
+                    </div> *@
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                    <p id="edit-message" class="text-success mt-2"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Move Modal -->
+<div class="modal fade" id="moveTenantModal" tabindex="-1" aria-labelledby="moveTenantLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="moveTenantLabel"><i class="fas fa-random me-2"></i>Move Tenant</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="move-tenant-form" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label for="move-building" class="form-label">Building</label>
+                        <select id="move-building" class="form-select" required>
+                            <option value="">Select Building</option>
+                            @foreach (var building in minimalBuildings)
+                            {
+                                <option value="@building.BuildingId">@building.BuildingName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="move-floor" class="form-label">Floor</label>
+                        <select id="move-floor" class="form-select" required disabled></select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="move-room" class="form-label">Room</label>
+                        <select id="move-room" class="form-select" required disabled></select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="move-startdate" class="form-label">Start Date</label>
+                        <input type="date" id="move-startdate" class="form-control" required>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="submit" class="btn btn-warning">Move Tenant</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                    <p id="move-message" class="text-success mt-2"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+<script>
+let activeModal = null;
+function forceCleanupModals() {
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(backdrop => {
+        backdrop.classList.remove('show');
+        backdrop.remove();
+    });
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    document.querySelectorAll('.modal').forEach(modal => {
+        const bsModal = bootstrap.Modal.getInstance(modal);
+        if (bsModal) {
+            bsModal.dispose();
+        }
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+        modal.removeAttribute('aria-modal');
+        modal.removeAttribute('role');
+    });
+    const remainingBackdrops = document.querySelectorAll('.modal-backdrop');
+    remainingBackdrops.forEach(backdrop => backdrop.remove());
+    activeModal = null;
+}
+document.addEventListener('DOMContentLoaded', function() {
+    forceCleanupModals();
+    const modals = ['editTenantModal', 'moveTenantModal'];
+    modals.forEach(modalId => {
+        const modalElement = document.getElementById(modalId);
+        if (!modalElement) return;
+        const modal = new bootstrap.Modal(modalElement, { backdrop: false });
+        modalElement.addEventListener('hidden.bs.modal', forceCleanupModals);
+        modalElement.addEventListener('show.bs.modal', function() {
+            if (activeModal) {
+                activeModal.hide();
+                forceCleanupModals();
+            }
+            activeModal = modal;
+        });
+    });
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal')) {
+            forceCleanupModals();
+        }
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            forceCleanupModals();
+        }
+    });
+});
+function showEditModal() {
+    forceCleanupModals();
+    const modalElement = document.getElementById('editTenantModal');
+    const modal = new bootstrap.Modal(modalElement, { backdrop: false });
+    modal.show();
+    activeModal = modal;
+}
+function showMoveModal() {
+    forceCleanupModals();
+    const modalElement = document.getElementById('moveTenantModal');
+    const modal = new bootstrap.Modal(modalElement, { backdrop: false });
+    modal.show();
+    activeModal = modal;
+}
+// AJAX for Edit Tenant
+const editForm = document.getElementById('edit-tenant-form');
+if (editForm) {
+    editForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append('Id', '@Model.Id');
+        formData.append('FirstName', document.getElementById('edit-firstname').value);
+        formData.append('LastName', document.getElementById('edit-lastname').value);
+        formData.append('UserName', document.getElementById('edit-username').value);
+        formData.append('Password', document.getElementById('edit-password').value);
+        formData.append('ConfirmPassword', document.getElementById('edit-confirm-password').value);
+        formData.append('PhoneNumber', document.getElementById('edit-phone').value);
+        formData.append('StartDate', document.getElementById('edit-startdate').value);
+        formData.append('__RequestVerificationToken', document.querySelector('#edit-tenant-form input[name="__RequestVerificationToken"]').value);
+
+        fetch('@Url.Action("EditTenant", "Landlord")', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.message) {
+                document.getElementById('edit-message').textContent = data.message;
+                if (data.success) {
+                    setTimeout(() => location.reload(), 1200);
+                }
+            }
+        });
+    });
+}
+// Dependent dropdowns for move modal
+const buildings = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(minimalBuildings));
+document.getElementById('move-building')?.addEventListener('change', function() {
+    const buildingId = this.value;
+    const floorSelect = document.getElementById('move-floor');
+    const roomSelect = document.getElementById('move-room');
+    floorSelect.innerHTML = '<option value="">Select Floor</option>';
+    roomSelect.innerHTML = '<option value="">Select Room</option>';
+    roomSelect.disabled = true;
+    if (!buildingId) {
+        floorSelect.disabled = true;
+        return;
+    }
+    const building = buildings.find(b => b.BuildingId == buildingId);
+    if (building && building.Floors) {
+        building.Floors.forEach(floor => {
+            const opt = document.createElement('option');
+            opt.value = floor.FloorId;
+            opt.textContent = floor.FloorName;
+            floorSelect.appendChild(opt);
+        });
+        floorSelect.disabled = false;
+    }
+});
+document.getElementById('move-floor')?.addEventListener('change', function() {
+    const buildingId = document.getElementById('move-building').value;
+    const floorId = this.value;
+    const roomSelect = document.getElementById('move-room');
+    roomSelect.innerHTML = '<option value="">Select Room</option>';
+    if (!floorId) {
+        roomSelect.disabled = true;
+        return;
+    }
+    const building = buildings.find(b => b.BuildingId == buildingId);
+    const floor = building?.Floors?.find(f => f.FloorId == floorId);
+    if (floor && floor.Rooms) {
+        floor.Rooms.filter(r => !r.IsOccupied).forEach(room => {
+            const opt = document.createElement('option');
+            opt.value = room.RoomId;
+            opt.textContent = room.RoomNumber;
+            roomSelect.appendChild(opt);
+        });
+        roomSelect.disabled = false;
+    }
+});
+// AJAX for Move Tenant
+const moveForm = document.getElementById('move-tenant-form');
+if (moveForm) {
+    moveForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const buildingId = document.getElementById('move-building').value;
+        const floorId = document.getElementById('move-floor').value;
+        const roomId = document.getElementById('move-room').value;
+        const startDate = document.getElementById('move-startdate').value;
+        const token = document.querySelector('#move-tenant-form input[name="__RequestVerificationToken"]').value;
+        const formData = new FormData();
+        formData.append('tenantId', '@Model.Id');
+        formData.append('buildingId', buildingId);
+        formData.append('floorId', floorId);
+        formData.append('roomId', roomId);
+        formData.append('startDate', startDate);
+        formData.append('__RequestVerificationToken', token);
+
+        fetch('@Url.Action("MoveTenant", "Landlord")', {
+            method: 'POST',
+            body: formData
+        })
+        .then(async response => {
+            let data;
+            try {
+                data = await response.json();
+            } catch (err) {
+                document.getElementById('move-message').textContent = "Server error or invalid response.";
+                document.getElementById('move-message').classList.add('text-danger');
+                return;
+            }
+            if (data && data.message) {
+                document.getElementById('move-message').textContent = data.message;
+                if (data.success) {
+                    document.getElementById('move-message').classList.remove('text-danger');
+                    document.getElementById('move-message').classList.add('text-success');
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    document.getElementById('move-message').classList.remove('text-success');
+                    document.getElementById('move-message').classList.add('text-danger');
+                }
+            }
+        })
+        .catch(err => {
+            document.getElementById('move-message').textContent = "Network or server error.";
+            document.getElementById('move-message').classList.add('text-danger');
+        });
+    });
+}
+function togglePasswordVisibility(inputId, eyeId) {
+    var input = document.getElementById(inputId);
+    var eye = document.getElementById(eyeId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        eye.classList.remove('fa-eye');
+        eye.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        eye.classList.remove('fa-eye-slash');
+        eye.classList.add('fa-eye');
+    }
+}
+</script>
+} 

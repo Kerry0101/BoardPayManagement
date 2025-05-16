@@ -1,0 +1,126 @@
+@model BoardPaySystem.Models.Room
+@{
+    ViewData["Title"] = "Add Room";
+    Layout = "_LandlordLayout";
+    var floor = ViewBag.Floor as Floor;
+    var building = ViewBag.Building as Building;
+}
+
+@if (ViewBag.DebugModelErrors != null && ((List<string>)ViewBag.DebugModelErrors).Any())
+{
+    <div class="alert alert-danger">
+        <strong>Debug Validation Errors:</strong>
+        <ul>
+        @foreach (var err in (List<string>)ViewBag.DebugModelErrors)
+        {
+            <li>@err</li>
+        }
+        </ul>
+    </div>
+}
+
+<div class="content-section">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-controller="Landlord" asp-action="ManageBuildings">Buildings</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a asp-controller="Landlord" asp-action="BuildingDetails" asp-route-id="@building.BuildingId">@building.BuildingName</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a asp-controller="Floor" asp-action="ManageFloors" asp-route-buildingId="@building.BuildingId">Floors</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a asp-action="ManageRooms" asp-route-floorId="@floor.FloorId">@floor.FloorName</a>
+            </li>
+            <li class="breadcrumb-item active">Add Room</li>
+        </ol>
+    </nav>
+    <div class="section-header">
+        <h3><i class="fas fa-door-closed"></i> Add New Room</h3>
+    </div>
+    <form asp-action="AddRoom" method="post" id="addRoomForm">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="FloorId" value="@floor.FloorId" />
+        <div class="form-grid">
+            <div class="form-group">
+                <label asp-for="RoomNumber" class="control-label">Room Number</label>
+                <input asp-for="RoomNumber" class="form-control" required />
+                <span asp-validation-for="RoomNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Description" class="control-label">Description <span class="text-muted" style="font-weight:400; font-size:0.95rem;">(Optional)</span></label>
+                <textarea asp-for="Description" class="form-control"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group form-grid-col-1">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h4 class="section-title mb-0">Custom Fees</h4>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="useCustomFeesSwitch" name="useCustomFees" value="true" onchange="toggleCustomFees()">
+                        <label class="form-check-label ms-2" for="useCustomFeesSwitch">Enable Custom Fees</label>
+                    </div>
+                </div>
+                <p class="text-muted mb-0">Leave off to use building default rates</p>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Monthly Rent</label>
+                <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input id="CustomMonthlyRent" name="CustomMonthlyRent" class="form-control" type="number" step="0.01" min="0" value="@(Model.CustomMonthlyRent ?? building.DefaultMonthlyRent)" disabled />
+                </div>
+                <small class="form-text text-muted">Building default: ₱@building.DefaultMonthlyRent</small>
+                <span asp-validation-for="CustomMonthlyRent" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Water Fee</label>
+                <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input id="CustomWaterFee" name="CustomWaterFee" class="form-control" type="number" step="0.01" min="0" value="@(Model.CustomWaterFee ?? building.DefaultWaterFee)" disabled />
+                </div>
+                <small class="form-text text-muted">Building default: ₱@building.DefaultWaterFee</small>
+                <span asp-validation-for="CustomWaterFee" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Electricity Fee</label>
+                <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input id="CustomElectricityFee" name="CustomElectricityFee" class="form-control" type="number" step="0.01" min="0" value="@(Model.CustomElectricityFee ?? building.DefaultElectricityFee)" disabled />
+                </div>
+                <small class="form-text text-muted">Building default: ₱@building.DefaultElectricityFee</small>
+                <span asp-validation-for="CustomElectricityFee" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label class="control-label">WiFi Fee</label>
+                <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input id="CustomWifiFee" name="CustomWifiFee" class="form-control" type="number" step="0.01" min="0" value="@(Model.CustomWifiFee ?? building.DefaultWifiFee)" disabled />
+                </div>
+                <small class="form-text text-muted">Building default: ₱@building.DefaultWifiFee</small>
+                <span asp-validation-for="CustomWifiFee" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="button-group mt-4">
+            <button type="submit" class="btn-success"><i class="fas fa-plus"></i> Create Room</button>
+            <a asp-action="ManageRooms" asp-route-floorId="@floor.FloorId" class="btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function toggleCustomFees() {
+            var checked = document.getElementById('useCustomFeesSwitch').checked;
+            document.getElementById('CustomMonthlyRent').disabled = !checked;
+            document.getElementById('CustomWaterFee').disabled = !checked;
+            document.getElementById('CustomElectricityFee').disabled = !checked;
+            document.getElementById('CustomWifiFee').disabled = !checked;
+        }
+        // On page load, ensure correct state
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleCustomFees();
+        });
+    </script>
+} 

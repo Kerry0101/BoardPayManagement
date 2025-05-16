@@ -1,0 +1,103 @@
+@model IEnumerable<BoardPaySystem.Models.Bill>
+@{
+    ViewData["Title"] = "Unpaid Bill Cycles";
+    Layout = "_LandlordLayout";
+    var tenant = ViewBag.Tenant as BoardPaySystem.Models.ApplicationUser;
+    var today = DateTime.Today;
+}
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h2>
+                <i class="fas fa-file-invoice"></i>
+                Unpaid Bill Cycles
+                @if (tenant != null)
+                {
+                    <span>- @tenant.FirstName @tenant.LastName</span>
+                }
+            </h2>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="fw-bold">@tenant?.FirstName @tenant?.LastName</div>
+                    <div class="text-muted small"><i class="fas fa-phone-alt"></i> @tenant?.PhoneNumber</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header bg-danger text-white py-2">
+            <span class="fw-bold" style="font-size:1.1rem;">Unpaid Bills by Cycle</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>TENANT</th>
+                            <th>ROOM</th>
+                            <th>DUE DATE</th>
+                            <th>TOTAL</th>
+                            <th>STATUS</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var bill in Model.OrderByDescending(b => b.DueDate))
+                        {
+                            var isOverdue = bill.Status == BoardPaySystem.Models.BillStatus.Overdue || (bill.Status != BoardPaySystem.Models.BillStatus.Paid && bill.DueDate < today);
+                            var daysOverdue = isOverdue ? (today - bill.DueDate).Days : 0;
+                            var adjustedTotal = bill.TotalAmount + (bill.LateFee ?? 0);
+                            <tr class="@(isOverdue ? "table-danger" : "")">
+                                <td class="fw-bold">@tenant?.FirstName @tenant?.LastName<br /><span class="text-muted">@tenant?.PhoneNumber</span></td>
+                                <td>@bill.Room?.RoomNumber<br /><span class="text-muted">@bill.Room?.Floor?.Building?.BuildingName</span></td>
+                                <td>@bill.DueDate.ToString("MM/dd/yyyy")</td>
+                                <td>
+                                    @if (isOverdue)
+                                    {
+                                        <span class="text-decoration-line-through text-muted">₱@bill.TotalAmount.ToString("#,##0.00")</span><br />
+                                        @if (bill.LateFee.HasValue && bill.LateFee.Value > 0)
+                                        {
+                                            <span class="text-danger">+ Late Fee: ₱@bill.LateFee.Value.ToString("#,##0.00")</span><br />
+                                            <span class="fw-bold text-danger">₱@adjustedTotal.ToString("#,##0.00")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fw-bold text-danger">₱@adjustedTotal.ToString("#,##0.00")</span>
+                                        }
+                                        <span class="text-danger small"><i class="fas fa-exclamation-circle"></i> @daysOverdue days overdue</span>
+                                    }
+                                    else
+                                    {
+                                        <span>₱@bill.TotalAmount.ToString("#,##0.00")</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (isOverdue)
+                                    {
+                                        <span class="badge bg-danger">Overdue</span>
+                                    }
+                                    else if (bill.Status == BoardPaySystem.Models.BillStatus.Pending)
+                                    {
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">NotPaid</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a href="@Url.Action("Payment", "Tenant", new { id = bill.BillId })" class="btn btn-success btn-sm mb-1">Mark as Paid</a>
+                                    <a href="@Url.Action("BillDetails", "Billing", new { id = bill.BillId })" class="btn btn-primary btn-sm mb-1">Details</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div> 

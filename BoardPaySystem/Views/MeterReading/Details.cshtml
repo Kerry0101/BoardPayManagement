@@ -1,0 +1,189 @@
+@model BoardPaySystem.Models.MeterReading
+@{
+    ViewData["Title"] = "Reading Details";
+    Layout = "_LandlordLayout";
+    var previousReadings = ViewBag.PreviousReadings as List<BoardPaySystem.Models.MeterReading>;
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Meter Readings</a></li>
+                    <li class="breadcrumb-item active">Reading Details</li>
+                </ol>
+            </nav>
+            <h1><i class="fas fa-bolt"></i> Meter Reading Details</h1>
+            <a href="/Landlord/MeterReadings?tenantId=@Model.TenantId" class="btn btn-success mb-3">
+                <i class="fas fa-plus"></i> Add Meter Reading
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Reading Information</h5>
+                    <div>
+                        <a asp-action="Edit" asp-route-id="@Model.ReadingId" class="btn btn-sm btn-primary">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Reading ID:</div>
+                        <div class="col-md-8">@Model.ReadingId</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Tenant:</div>
+                        <div class="col-md-8">@Model.Tenant.FirstName @Model.Tenant.LastName</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Building:</div>
+                        <div class="col-md-8">@Model.Room.Floor.Building.BuildingName</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Room:</div>
+                        <div class="col-md-8">Room @Model.Room.RoomNumber</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Reading Date:</div>
+                        <div class="col-md-8">@Model.ReadingDate.ToString("MMMM dd, yyyy")</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Current Reading:</div>
+                        <div class="col-md-8">@Model.CurrentReading kWh</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Previous Reading:</div>
+                        <div class="col-md-8">@(Model.PreviousReading?.ToString() ?? "N/A") @(Model.PreviousReading.HasValue ? "kWh" : "")</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Usage:</div>
+                        <div class="col-md-8">@Model.UsageKwh kWh</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Rate per kWh:</div>
+                        <div class="col-md-8">@Model.RatePerKwh.ToString("C")</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Total Charge:</div>
+                        <div class="col-md-8 fw-bold fs-5">@Model.TotalCharge.ToString("C")</div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">Notes:</div>
+                            <div class="col-md-8">@Model.Notes</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Reading History</h5>
+                </div>
+                <div class="card-body">
+                    @if (previousReadings != null && previousReadings.Any())
+                    {
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Reading</th>
+                                    <th>Usage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var reading in previousReadings)
+                                {
+                                    <tr>
+                                        <td>@reading.ReadingDate.ToString("MM/dd/yyyy")</td>
+                                        <td>@reading.CurrentReading kWh</td>
+                                        <td>@reading.UsageKwh kWh</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        
+                        <a asp-action="TenantHistory" asp-route-id="@Model.TenantId" class="btn btn-outline-primary btn-sm w-100">
+                            <i class="fas fa-chart-line"></i> View Full History
+                        </a>
+                    }
+                    else
+                    {
+                        <p class="mb-0">No previous readings found for this tenant.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this meter reading? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form asp-action="Delete" asp-route-id="@Model.ReadingId">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('form').on('submit', function(e) {
+                e.preventDefault();
+                const form = $(this);
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: form.serialize(),
+                    success: function(response) {
+                        if (response.success) {
+                            // Show success and redirect
+                            alert(response.message);
+                            window.location.href = '@Url.Action("Index")';
+                        } else {
+                            // Show error
+                            alert(response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('An error occurred while processing your request.');
+                    }
+                });
+            });
+        });
+    </script>
+}

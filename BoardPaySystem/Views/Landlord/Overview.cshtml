@@ -1,0 +1,241 @@
+﻿@{
+    ViewData["Title"] = "Overview";
+    Layout = "_LandlordLayout";
+}
+
+<div class="content-section">
+    <div class="section-header">
+        <h3>
+            <span>
+                <i class="bi bi-grid-1x2-fill"></i>
+                Dashboard Overview
+            </span>
+        </h3>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="dashboard-grid">
+        <!-- Buildings Overview Card -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h4><i class="bi bi-buildings text-primary"></i> Buildings Overview</h4>
+                <span class="badge bg-primary">@ViewBag.BuildingsCount</span>
+            </div>
+            <div class="card-body">
+                <div class="stat-item">
+                    <span><i class="bi bi-layers"></i> Total Floors</span>
+                    <span class="stat-value">@ViewBag.FloorsCount</span>
+                </div>
+                <div class="stat-item">
+                    <span><i class="bi bi-door-open"></i> Total Rooms</span>
+                    <span class="stat-value">@ViewBag.RoomsCount</span>
+                </div>
+                <div class="stat-item">
+                    <span><i class="bi bi-people"></i> Total Tenants</span>
+                    <span class="stat-value">@ViewBag.TenantsCount</span>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a asp-action="ManageBuildings" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="bi bi-building-add"></i> Manage Buildings
+                </a>
+            </div>
+        </div>
+
+        <!-- Room Status Card -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h4><i class="bi bi-door-closed text-success"></i> Room Status</h4>
+                <span class="badge bg-success">@ViewBag.TotalRooms Total</span>
+            </div>
+            <div class="card-body">
+                <div class="stat-item">
+                    <span><i class="bi bi-person-check"></i> Occupied</span>
+                    <span class="stat-value text-success">@ViewBag.OccupiedRooms</span>
+                </div>
+                <div class="stat-item">
+                    <span><i class="bi bi-person-dash"></i> Vacant</span>
+                    <span class="stat-value text-danger">@ViewBag.VacantRooms</span>
+                </div>
+                <div class="progress mt-3" style="height: 10px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: @ViewBag.OccupancyRate%;" 
+                         aria-valuenow="@ViewBag.OccupancyRate" aria-valuemin="0" aria-valuemax="100">
+                    </div>
+                </div>
+                <div class="text-center mt-2">
+                    <small class="text-muted">@ViewBag.OccupancyRate% Occupancy Rate</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contracts Card -->
+        @* <div class="dashboard-card">
+            <div class="card-header">
+                <h4><i class="bi bi-file-text text-info"></i> Contracts</h4>
+                <span class="badge bg-info">@ViewBag.ActiveContracts Active</span>
+            </div>
+            <div class="card-body">
+                <div class="stat-item">
+                    <span><i class="bi bi-exclamation-circle"></i> Expiring Soon</span>
+                    <span class="stat-value text-warning">@ViewBag.ExpiringContracts</span>
+                </div>
+                <div class="alert alert-warning mt-3" role="alert" style="font-size: 0.9rem;">
+                    <i class="bi bi-info-circle"></i>
+                    @ViewBag.ExpiringContracts contract(s) expiring in the next 30 days
+                </div>
+            </div>
+            <div class="card-footer">
+                <a asp-action="ManageTenants" class="btn btn-outline-info btn-sm w-100">
+                    <i class="bi bi-people"></i> Manage Tenants
+                </a>
+            </div>
+        </div> *@
+
+        <!-- Billing Status Card -->
+        @* <div class="dashboard-card">
+            <div class="card-header">
+                <h4><i class="bi bi-receipt text-warning"></i> Monthly Billing</h4>
+                <span class="badge bg-warning">@ViewBag.TotalBills Total</span>
+            </div>
+            <div class="card-body">
+                <div class="stat-item">
+                    <span><i class="bi bi-check-circle"></i> Paid</span>
+                    <span class="stat-value text-success">@ViewBag.PaidBills</span>
+                </div>
+                <div class="stat-item">
+                    <span><i class="bi bi-clock"></i> Pending</span>
+                    <span class="stat-value text-warning">@ViewBag.PendingBills</span>
+                </div>
+                <div class="stat-item">
+                    <span><i class="bi bi-exclamation-triangle"></i> Overdue</span>
+                    <span class="stat-value text-danger">@ViewBag.OverdueBills</span>
+                </div>
+                <hr />
+                <div class="stat-item">
+                    <span><i class="bi bi-cash"></i> Total Billed</span>
+                    <span class="stat-value">@ViewBag.TotalBilledAmount</span>
+                </div>
+                <div class="stat-item">
+                    <span><i class="bi bi-check-square"></i> Total Paid</span>
+                    <span class="stat-value text-success">@ViewBag.TotalPaidAmount</span>
+                </div>
+                <div class="stat-item">
+                    <span><i class="bi bi-hourglass"></i> Total Pending</span>
+                    <span class="stat-value text-warning">@ViewBag.TotalPendingAmount</span>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a asp-action="Billing" class="btn btn-outline-warning btn-sm w-100">
+                    <i class="bi bi-receipt"></i> Manage Billing
+                </a>
+            </div>
+        </div> *@
+    </div>
+</div>
+
+<style>
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .dashboard-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .card-header {
+        padding: 1rem;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .card-footer {
+        padding: 1rem;
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .stat-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .stat-value {
+        font-weight: 600;
+    }
+
+    .progress {
+        background-color: #e9ecef;
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        transition: width 0.6s ease;
+    }
+
+    .alert {
+        margin: 0;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .badge {
+        padding: 0.5em 0.75em;
+        font-weight: 500;
+    }
+
+    hr {
+        margin: 1rem 0;
+        border-color: #e9ecef;
+    }
+
+    .bi {
+        margin-right: 0.25rem;
+    }
+
+    @@media (max-width: 768px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>

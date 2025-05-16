@@ -1,0 +1,28 @@
+﻿@model BoardPaySystem.Models.Bill
+@{
+    Layout = "_TenantLayout";
+    ViewData["Title"] = "Payment Options";
+}
+
+<div class="content-section active">
+    <h3><i class="fas fa-credit-card"></i> Payment Options</h3>
+    <div class="info-card">
+        <h4>Pay via GCash</h4>
+        <p>Click button to simulate paying ₱@Model.TotalAmount.ToString("N2").</p>
+        <p><strong>GCash Number:</strong> 0917-XXX-XXXX (J. Reyes)</p>
+        <form asp-action="SubmitPayment" method="post">
+            <input type="hidden" name="billId" value="@Model.BillId" />
+            <div class="form-group mb-3 gcash-input-group">
+                <label for="paymentReference" class="form-label gcash-label">GCash Reference Number</label>
+                <input type="text" class="form-control gcash-input" id="paymentReference" name="paymentReference" required placeholder="Enter the GCash reference number here" />
+                <div class="form-text">This is the unique reference number provided by GCash after your payment</div>
+            </div>
+            <button type="submit" class="btn-success mt-20">Simulate GCash Payment</button>
+        </form>
+    </div>
+    <div class="info-card">
+        <h4>Pay In Person</h4>
+        <p>Pay at Sunshine Apartments Office.</p>
+        <p><strong>Availability:</strong> Mon-Fri, 9 AM - 5 PM</p>
+    </div>
+</div>
