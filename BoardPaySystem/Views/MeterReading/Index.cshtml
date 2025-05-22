@@ -56,7 +56,9 @@
                     <tbody>
                         @foreach (var reading in Model)
                         {
-                            <tr>
+                            // Find if this is the base reading for this room (earliest reading for this room)
+                            var isBaseReading = Model.Where(r => r.RoomId == reading.RoomId).OrderBy(r => r.ReadingDate).FirstOrDefault()?.ReadingId == reading.ReadingId;
+                            <tr id="reading-row-@reading.ReadingId">
                                 <td>@reading.Tenant.FirstName @reading.Tenant.LastName</td>
                                 <td>@reading.Room.Floor.Building.BuildingName</td>
                                 <td>@reading.Room.RoomNumber</td>
@@ -64,7 +66,7 @@
                                 <td>@reading.CurrentReading</td>
                                 <td>@(reading.PreviousReading?.ToString() ?? "N/A")</td>
                                 <td>@reading.UsageKwh</td>
-                                <td>@reading.TotalCharge.ToString("C")</td>
+                                <td>@reading.TotalCharge.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
                                         <a asp-action="Details" asp-route-id="@reading.ReadingId" class="btn btn-info">
@@ -73,6 +75,16 @@
                                         <a asp-action="Edit" asp-route-id="@reading.ReadingId" class="btn btn-primary">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        @if (!isBaseReading)
+                                        {
+                                            <button class="btn btn-danger delete-reading-btn" data-reading-id="@reading.ReadingId">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted" title="Base reading cannot be deleted">Base</span>
+                                        }
                                     </div>
                                 </td>
                             </tr>
@@ -90,6 +102,30 @@
             $('#readingsTable').DataTable({
                 order: [[3, 'desc']], // Sort by reading date
                 pageLength: 25
+            });
+            // Handle delete reading button click
+            $(document).on('click', '.delete-reading-btn', function() {
+                var readingId = $(this).data('reading-id');
+                if (!confirm('Are you sure you want to delete this meter reading?')) return;
+                var btn = $(this);
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+                $.ajax({
+                    url: '/MeterReading/Delete/' + readingId,
+                    type: 'POST',
+                    data: { __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#reading-row-' + readingId).fadeOut(300, function() { $(this).remove(); });
+                        } else {
+                            alert(response.message || 'Failed to delete reading.');
+                            btn.prop('disabled', false).html('<i class="fas fa-trash"></i>');
+                        }
+                    },
+                    error: function() {
+                        alert('An error occurred while deleting the reading.');
+                        btn.prop('disabled', false).html('<i class="fas fa-trash"></i>');
+                    }
+                });
             });
         });
     </script>

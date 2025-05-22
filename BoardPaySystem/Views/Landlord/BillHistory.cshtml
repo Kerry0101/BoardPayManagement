@@ -96,12 +96,12 @@
                                     <tr>
                                         <td>@b.BillingPeriod</td>
                                         <td>@b.DueDate.ToString("yyyy-MM-dd")</td>
-                                        <td>@b.Rent.ToString("C")</td>
-                                        <td>@b.Water.ToString("C")</td>
-                                        <td>@b.Electricity.ToString("C")</td>
-                                        <td>@b.Wifi.ToString("C")</td>
-                                        <td>@b.LateFee.ToString("C")</td>
-                                        <td>@b.Total.ToString("C")</td>
+                                        <td>@b.Rent.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        <td>@b.Water.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        <td>@b.Electricity.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        <td>@b.Wifi.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        <td>@b.LateFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        <td>@b.Total.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                         <td>@b.Status</td>
                                         <td>@(b.PaymentDate.HasValue ? b.PaymentDate.Value.ToString("yyyy-MM-dd") : "")</td>
                                         <td>@b.Reference</td>

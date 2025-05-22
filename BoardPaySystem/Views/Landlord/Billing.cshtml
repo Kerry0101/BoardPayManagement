@@ -156,7 +156,7 @@
                                     </td>
                                     <td>@tenant.CurrentRoom?.RoomNumber</td>
                                     <td class="text-center fw-bold">@ViewBag.TenantUnpaidBillCount[tenant.Id]</td>
-                                    <td class="fw-bold text-danger">@ViewBag.TenantTotalAmountsDue[tenant.Id].ToString("C")</td>
+                                    <td class="fw-bold text-danger">@ViewBag.TenantTotalAmountsDue[tenant.Id].ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                     <td>
                                         <a href="@Url.Action("TenantUnpaidCycles", "Landlord", new { id = tenant.Id })" class="btn btn-primary btn-sm">
                                             <i class="fas fa-eye"></i> DETAILS
@@ -191,37 +191,37 @@
                         </thead>
                         <tbody class="small">
                         @if (tenantsWithOnlyCurrentUnpaidBill != null && tenantsWithOnlyCurrentUnpaidBill.Count > 0)
-                        {
+                            {
                             foreach (var tenant in tenantsWithOnlyCurrentUnpaidBill)
                             {
                                 if (billsByTenant != null && billsByTenant.ContainsKey(tenant.Id))
                                 {
                                     foreach (var bill in billsByTenant[tenant.Id])
-                                    {
-                                        <tr>
-                                            <td>
+                                {
+                                    <tr>
+                                        <td>
                                                 <div class="fw-bold">@tenant.FirstName @tenant.LastName</div>
-                                                <div class="text-muted small">
+                                            <div class="text-muted small">
                                                     <i class="fas fa-phone-alt"></i> @tenant.PhoneNumber
-                                                </div>
-                                                <div class="text-muted small">
+                                            </div>
+                                            <div class="text-muted small">
                                                     @tenant.CurrentRoom?.RoomNumber
-                                                </div>
-                                            </td>
-                                            <td>@bill.Room?.RoomNumber</td>
-                                            <td>@bill.DueDate.ToString("MM/dd/yyyy")</td>
-                                            <td class="fw-bold">@bill.TotalAmount.ToString("C")</td>
-                                            <td>
+                                            </div>
+                                        </td>
+                                        <td>@bill.Room?.RoomNumber</td>
+                                        <td>@bill.DueDate.ToString("MM/dd/yyyy")</td>
+                                        <td class="fw-bold">@bill.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        <td>
                                                 <span class="badge bg-secondary">@bill.Status</span>
-                                            </td>
-                                            <td>
+                                        </td>
+                                        <td>
                                                 <a href="@Url.Action("BillDetails", "Billing", new { id = bill.BillId })" class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-eye"></i> DETAILS
+                                                <i class="fas fa-eye"></i> DETAILS
                                                 </a>
                                                 @* Add Payment button or other actions as needed *@
-                                            </td>
-                                        </tr>
-                                    }
+                                        </td>
+                                    </tr>
+                                }
                                 }
                             }
                         }
@@ -252,33 +252,14 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
-            // Approve GCash payment button click
-            $('.approve-payment-btn').click(function() {
-                const billId = $(this).data('bill-id');
-                const tenantName = $(this).data('tenant-name');
-                const amount = $(this).data('amount');
-                const paymentRef = $(this).data('payment-ref');
-                
-                $('#billId').val(billId);
-                $('#tenantNameSpan').text(tenantName);
-                $('#amount').val(amount);
-                $('#paymentRefDisplay').val(paymentRef);
-                
-                // Show the modal
-                const approvePaymentModal = new bootstrap.Modal(document.getElementById('approvePaymentModal'));
-                approvePaymentModal.show();
-            });
-            
             // Mark as Paid button click
             $('.mark-paid-btn').click(function() {
                 const billId = $(this).data('bill-id');
                 const tenantName = $(this).data('tenant-name');
                 const amount = $(this).data('amount');
-                
                 $('#paidBillId').val(billId);
                 $('#paidTenantNameSpan').text(tenantName);
                 $('#paidAmount').val(amount);
-                
                 // Show the modal
                 const markPaidModal = new bootstrap.Modal(document.getElementById('markPaidModal'));
                 markPaidModal.show();

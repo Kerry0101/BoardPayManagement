@@ -27,14 +27,17 @@
                 <h3>@Model.BuildingName</h3>
             </div>
             <div class="header-actions">
-                <a asp-controller="Floor" asp-action="ManageFloors" asp-route-buildingId="@Model.BuildingId" 
+                <a asp-controller="Floor" asp-action="ManageFloors" asp-route-buildingId="@Model.BuildingId"
                    class="btn-primary" title="Manage Floors">
                     <i class="fas fa-layer-group"></i> Manage Floors
                 </a>
-                <a asp-action="EditBuilding" asp-route-id="@Model.BuildingId" 
+                <a asp-action="EditBuilding" asp-route-id="@Model.BuildingId"
                    class="btn-secondary" title="Edit Building">
                     <i class="fas fa-edit"></i> Edit Building
                 </a>
+                <!-- <button type="button" class="btn-danger" title="Delete Building" id="deleteBuilding">
+                    <i class="fas fa-trash"></i> Delete Building
+                </button> -->
             </div>
         </div>
 
@@ -128,10 +131,10 @@
                                     <td>@occupiedRooms</td>
                                     <td>
                                         <div class="progress" style="height: 20px;">
-                                            <div class="progress-bar bg-success" role="progressbar" 
-                                                 style="width: @occupancyRate%;" 
-                                                 aria-valuenow="@occupancyRate" 
-                                                 aria-valuemin="0" 
+                                            <div class="progress-bar bg-success" role="progressbar"
+                                                 style="width: @occupancyRate%;"
+                                                 aria-valuenow="@occupancyRate"
+                                                 aria-valuemin="0"
                                                  aria-valuemax="100">
                                                 @occupancyRate.ToString("F1")%
                                             </div>
@@ -139,13 +142,13 @@
                                     </td>
                                     <td>
                                         <div class="btn-group">
-                                            <a asp-controller="Room" asp-action="ManageRooms" 
-                                               asp-route-floorId="@floor.FloorId" 
+                                            <a asp-controller="Room" asp-action="ManageRooms"
+                                               asp-route-floorId="@floor.FloorId"
                                                class="btn-icon" title="Manage Rooms">
                                                 <i class="fas fa-door-open"></i>
                                             </a>
-                                            <a asp-controller="Floor" asp-action="EditFloor" 
-                                               asp-route-id="@floor.FloorId" 
+                                            <a asp-controller="Floor" asp-action="EditFloor"
+                                               asp-route-id="@floor.FloorId"
                                                class="btn-icon" title="Edit Floor">
                                                 <i class="fas fa-edit"></i>
                                             </a>
@@ -196,6 +199,49 @@
                     <i class="fas fa-edit"></i>
                     Proceed with Edit
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Building Confirmation Modal -->
+<div class="modal fade" id="deleteBuildingModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="deleteBuildingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title" id="deleteBuildingModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Delete Building Confirmation
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>Warning: This action cannot be undone!</strong>
+                </div>
+                <p>You are about to delete the building <strong>@Model.BuildingName</strong> and all associated data:</p>
+                <ul class="warning-list">
+                    <li>All floors in this building</li>
+                    <li>All rooms in this building</li>
+                    <li>All contracts associated with rooms in this building</li>
+                    <li>All bills and payments associated with rooms in this building</li>
+                    <li>All meter readings associated with rooms in this building</li>
+                </ul>
+                <p>Tenant accounts will not be deleted, but they will be unassigned from this building.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <form asp-action="DeleteBuilding" asp-route-id="@Model.BuildingId" method="post" id="deleteBuildingForm">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn-danger">
+                        <i class="fas fa-trash"></i>
+                        Delete Building
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -460,6 +506,29 @@
         background-color: #ffb300;
         color: #000;
     }
+
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    .btn-danger:hover {
+        background-color: #c82333;
+        color: white;
+    }
+
+    .modal-header.bg-danger {
+        background-color: #dc3545;
+        color: white;
+    }
 </style>
 
 @section Scripts {
@@ -503,7 +572,10 @@
 
         // Initialize all modals with proper options
         document.addEventListener('DOMContentLoaded', function() {
-            const modals = ['editBuildingWarningModal'];
+            const modals = [
+                'editBuildingWarningModal',
+                'deleteBuildingModal'
+            ];
 
             // Initial cleanup
             forceCleanupModals();
@@ -554,6 +626,48 @@
                     };
                 });
             }
+
+            // Handle Delete Building button click
+            const deleteBtn = document.getElementById('deleteBuilding');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function() {
+                    showModal('deleteBuildingModal');
+                });
+            }
+
+            // Handle delete form submission
+            const deleteBuildingForm = document.getElementById('deleteBuildingForm');
+            if (deleteBuildingForm) {
+                deleteBuildingForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const form = this;
+
+                    // Submit the form using fetch API
+                    fetch(form.action, {
+                        method: form.method,
+                        body: new FormData(form),
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Redirect to buildings list on success
+                            window.location.href = '@Url.Action("ManageBuildings", "Landlord")';
+                        } else {
+                            // Show error message if delete fails
+                            alert('Delete failed: ' + data.message);
+                            forceCleanupModals();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An unexpected error occurred during delete.');
+                        forceCleanupModals();
+                    });
+                });
+            }
         });
 
         function showModal(modalId) {
@@ -566,4 +680,4 @@
             activeModal = modal;
         }
     </script>
-} 
+}

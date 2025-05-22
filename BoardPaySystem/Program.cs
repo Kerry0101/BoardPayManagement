@@ -1,7 +1,7 @@
-using BoardPaySystem.Models;
-using BoardPaySystem.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using BoardPaySystem.Models;
+using BoardPaySystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,11 +56,11 @@ if (!disableBackgroundServices)
     builder.Services.AddHostedService<NotificationBackgroundService>();
 }
 
+// Add SMS service
+builder.Services.AddHttpClient<SmsService>();
+
 // Add landlord service
 builder.Services.AddScoped<ILandlordService, LandlordService>();
-
-// Add SmsService with AddHttpClient for DI
-builder.Services.AddHttpClient<SmsService>();
 
 var app = builder.Build();
 
@@ -110,11 +110,6 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 app.MapRazorPages(); // Add this for Identity UI pages
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-}
 
 app.Run();
 

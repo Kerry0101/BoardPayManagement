@@ -393,6 +393,69 @@ namespace BoardPaySystem.Controllers
             return Json(new { success = true, data = rooms });
         }
 
+        [HttpGet]
+        public async Task<JsonResult> GetOccupiedRooms(int floorId)
+        {
+            var rooms = await _context.Rooms
+                .Where(r => r.FloorId == floorId)
+                .ToListAsync();
+
+            // Log all rooms for this floor
+            foreach (var room in rooms)
+            {
+                _logger.LogInformation($"Room {room.RoomId}: IsOccupied={room.IsOccupied}, TenantId={room.TenantId}");
+            }
+
+            var occupiedRooms = rooms
+                .Where(r => r.IsOccupied && r.TenantId != null)
+                .OrderBy(r => r.RoomNumber)
+                .Select(r => new {
+                    roomId = r.RoomId,
+                    displayName = $"Room {r.RoomNumber}"
+                })
+                .ToList();
+
+            _logger.LogInformation($"Occupied rooms found: {occupiedRooms.Count}");
+
+            return Json(new { success = true, data = occupiedRooms });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetRoomInfo(int roomId)
+        {
+            var room = await _context.Rooms
+                .Include(r => r.Floor)
+                .ThenInclude(f => f.Building)
+                .FirstOrDefaultAsync(r => r.RoomId == roomId);
+
+            if (room == null)
+                return Json(new { success = false });
+
+            // Get the tenant
+            var tenantId = room.TenantId;
+            decimal? previousReading = null;
+            if (!string.IsNullOrEmpty(tenantId))
+            {
+                var lastReading = await _context.MeterReadings
+                    .Where(m => m.TenantId == tenantId)
+                    .OrderByDescending(m => m.ReadingDate)
+                    .FirstOrDefaultAsync();
+                previousReading = lastReading?.CurrentReading;
+            }
+
+            // Get the rate (custom or default)
+            decimal rate = room.CustomElectricityFee
+                ?? room.Floor?.Building?.DefaultElectricityFee
+                ?? 0;
+
+            return Json(new
+            {
+                success = true,
+                rate,
+                previousReading
+            });
+        }
+
         private bool RoomExists(int id)
         {
             return _context.Rooms.Any(e => e.RoomId == id);

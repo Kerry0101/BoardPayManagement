@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "NqLjk0IzhW1ycaLM5euI4ZwWBWJc/yiBjcoYRDhU4mo=",
+  "Hash": "SZlpCBAdd2QLgXAVfcWtp+8io7DFPOJrDRCJqOJaDWk=",
   "Source": "BoardPaySystem",
   "BasePath": "_content/BoardPaySystem",
   "Mode": "Default",
@@ -2117,12 +2117,12 @@
       "OriginalItemSpec": "C:\\Users\\teche\\.nuget\\packages\\microsoft.aspnetcore.identity.ui\\9.0.4\\staticwebassets\\V5\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.css"
     },
     {
-      "Identity": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\dm792kjgc6-aspki182ul.gz",
+      "Identity": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\dm792kjgc6-cbo4c7lhcw.gz",
       "SourceId": "BoardPaySystem",
       "SourceType": "Discovered",
       "ContentRoot": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\",
       "BasePath": "_content/BoardPaySystem",
-      "RelativePath": "js/site#[.{fingerprint=aspki182ul}]?.js.gz",
+      "RelativePath": "js/site#[.{fingerprint=cbo4c7lhcw}]?.js.gz",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Alternative",
@@ -2131,8 +2131,8 @@
       "RelatedAsset": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\wwwroot\\js\\site.js",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "ooretkmkyb",
-      "Integrity": "WA9DT4Jo/WfIhFY1M3feUwmFHBad92oi7apg1CTBRww=",
+      "Fingerprint": "thfigj7wgn",
+      "Integrity": "DzVxm5EESOK/I3Lg4Lm4Zwy8kQFt1Mb9bpl3K7V0MfA=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\wwwroot\\js\\site.js"
@@ -3209,12 +3209,12 @@
       "OriginalItemSpec": "C:\\Users\\teche\\.nuget\\packages\\microsoft.aspnetcore.identity.ui\\9.0.4\\staticwebassets\\V5\\lib\\bootstrap\\dist\\css\\bootstrap-grid.css.map"
     },
     {
-      "Identity": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\ri94p9u0bu-rz2p0i3di1.gz",
+      "Identity": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\ri94p9u0bu-3jdhwko170.gz",
       "SourceId": "BoardPaySystem",
       "SourceType": "Discovered",
       "ContentRoot": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\",
       "BasePath": "_content/BoardPaySystem",
-      "RelativePath": "css/tenant-custom#[.{fingerprint=rz2p0i3di1}]?.css.gz",
+      "RelativePath": "css/tenant-custom#[.{fingerprint=3jdhwko170}]?.css.gz",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Alternative",
@@ -3223,8 +3223,8 @@
       "RelatedAsset": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\wwwroot\\css\\tenant-custom.css",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "qwy97lo4uy",
-      "Integrity": "+nPSvHmWiu9S0f8YHRxezeoSkJGSclQqpRdwIA4Yt1E=",
+      "Fingerprint": "yx2yizyqs2",
+      "Integrity": "ml7fkCp36NLDvaOVM6uPOCUvoLxbM+KgNsH2HTsS8EQ=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\wwwroot\\css\\tenant-custom.css"
@@ -4147,8 +4147,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "rz2p0i3di1",
-      "Integrity": "Z9Md03EEQJkwvMKF7ODYs4S3DU9Rjb/L8LDKjLJwV94=",
+      "Fingerprint": "3jdhwko170",
+      "Integrity": "QfGbYIzdm0DoqtK9hGBGKrzPGxBdALAyZMKhAVgYQj0=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\css\\tenant-custom.css"
@@ -4189,8 +4189,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "aspki182ul",
-      "Integrity": "irXN3c8ZhDZQyfDD0PCpdqVtHxWofngwW+ws6y5FDHw=",
+      "Fingerprint": "cbo4c7lhcw",
+      "Integrity": "GOy7BUa1VY8prs8lgLEX5EscFNXBBK2sMffV5+6t0/g=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\js\\site.js"
@@ -5503,7 +5503,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 14 May 2025 15:20:59 GMT"
+          "Value": "Mon, 19 May 2025 01:05:34 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -5556,7 +5556,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 14 May 2025 15:20:59 GMT"
+          "Value": "Mon, 19 May 2025 01:05:34 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -5593,7 +5593,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 14 May 2025 15:20:59 GMT"
+          "Value": "Mon, 19 May 2025 01:05:34 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -5640,7 +5640,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 14 May 2025 15:20:58 GMT"
+          "Value": "Mon, 19 May 2025 01:05:34 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -5693,7 +5693,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 14 May 2025 15:20:58 GMT"
+          "Value": "Mon, 19 May 2025 01:05:34 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -5730,7 +5730,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 14 May 2025 15:20:58 GMT"
+          "Value": "Mon, 19 May 2025 01:05:34 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -5777,7 +5777,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 14 May 2025 15:20:59 GMT"
+          "Value": "Mon, 19 May 2025 01:05:34 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -5838,7 +5838,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 14 May 2025 15:20:59 GMT"
+          "Value": "Mon, 19 May 2025 01:05:34 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -5883,7 +5883,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 14 May 2025 15:20:59 GMT"
+          "Value": "Mon, 19 May 2025 01:05:34 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -5938,7 +5938,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 14 May 2025 15:20:58 GMT"
+          "Value": "Mon, 19 May 2025 01:05:34 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -5999,7 +5999,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 14 May 2025 15:20:58 GMT"
+          "Value": "Mon, 19 May 2025 01:05:34 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -6044,7 +6044,7 @@
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 14 May 2025 15:20:58 GMT"
+          "Value": "Mon, 19 May 2025 01:05:34 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -6708,13 +6708,13 @@
       ]
     },
     {
-      "Route": "css/tenant-custom.css",
-      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\ri94p9u0bu-rz2p0i3di1.gz",
+      "Route": "css/tenant-custom.3jdhwko170.css",
+      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\ri94p9u0bu-3jdhwko170.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000442086649"
+          "Quality": "0.000457247371"
         }
       ],
       "ResponseHeaders": [
@@ -6724,19 +6724,19 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "2261"
+          "Value": "2186"
         },
         {
           "Name": "ETag",
-          "Value": "\"+nPSvHmWiu9S0f8YHRxezeoSkJGSclQqpRdwIA4Yt1E=\""
+          "Value": "\"ml7fkCp36NLDvaOVM6uPOCUvoLxbM+KgNsH2HTsS8EQ=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 13 May 2025 07:14:57 GMT"
+          "Value": "Sun, 18 May 2025 09:29:13 GMT"
         },
         {
           "Name": "Cache-Control",
-          "Value": "no-cache"
+          "Value": "max-age=31536000, immutable"
         },
         {
           "Name": "Content-Encoding",
@@ -6752,18 +6752,26 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"Z9Md03EEQJkwvMKF7ODYs4S3DU9Rjb/L8LDKjLJwV94=\""
+          "Value": "W/\"QfGbYIzdm0DoqtK9hGBGKrzPGxBdALAyZMKhAVgYQj0=\""
         }
       ],
       "EndpointProperties": [
         {
+          "Name": "fingerprint",
+          "Value": "3jdhwko170"
+        },
+        {
+          "Name": "label",
+          "Value": "css/tenant-custom.css"
+        },
+        {
           "Name": "integrity",
-          "Value": "sha256-Z9Md03EEQJkwvMKF7ODYs4S3DU9Rjb/L8LDKjLJwV94="
+          "Value": "sha256-QfGbYIzdm0DoqtK9hGBGKrzPGxBdALAyZMKhAVgYQj0="
         }
       ]
     },
     {
-      "Route": "css/tenant-custom.css",
+      "Route": "css/tenant-custom.3jdhwko170.css",
       "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\wwwroot\\css\\tenant-custom.css",
       "Selectors": [],
       "ResponseHeaders": [
@@ -6773,7 +6781,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "7672"
+          "Value": "7444"
         },
         {
           "Name": "Content-Type",
@@ -6781,121 +6789,21 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"Z9Md03EEQJkwvMKF7ODYs4S3DU9Rjb/L8LDKjLJwV94=\""
+          "Value": "\"QfGbYIzdm0DoqtK9hGBGKrzPGxBdALAyZMKhAVgYQj0=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 13 May 2025 07:14:57 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-Z9Md03EEQJkwvMKF7ODYs4S3DU9Rjb/L8LDKjLJwV94="
-        }
-      ]
-    },
-    {
-      "Route": "css/tenant-custom.css.gz",
-      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\ri94p9u0bu-rz2p0i3di1.gz",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "2261"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"+nPSvHmWiu9S0f8YHRxezeoSkJGSclQqpRdwIA4Yt1E=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Tue, 13 May 2025 07:14:57 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-+nPSvHmWiu9S0f8YHRxezeoSkJGSclQqpRdwIA4Yt1E="
-        }
-      ]
-    },
-    {
-      "Route": "css/tenant-custom.rz2p0i3di1.css",
-      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\ri94p9u0bu-rz2p0i3di1.gz",
-      "Selectors": [
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip",
-          "Quality": "0.000442086649"
-        }
-      ],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "2261"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"+nPSvHmWiu9S0f8YHRxezeoSkJGSclQqpRdwIA4Yt1E=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Tue, 13 May 2025 07:14:57 GMT"
+          "Value": "Sun, 18 May 2025 09:29:13 GMT"
         },
         {
           "Name": "Cache-Control",
           "Value": "max-age=31536000, immutable"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "W/\"Z9Md03EEQJkwvMKF7ODYs4S3DU9Rjb/L8LDKjLJwV94=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "rz2p0i3di1"
+          "Value": "3jdhwko170"
         },
         {
           "Name": "label",
@@ -6903,13 +6811,13 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-Z9Md03EEQJkwvMKF7ODYs4S3DU9Rjb/L8LDKjLJwV94="
+          "Value": "sha256-QfGbYIzdm0DoqtK9hGBGKrzPGxBdALAyZMKhAVgYQj0="
         }
       ]
     },
     {
-      "Route": "css/tenant-custom.rz2p0i3di1.css",
-      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\wwwroot\\css\\tenant-custom.css",
+      "Route": "css/tenant-custom.3jdhwko170.css.gz",
+      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\ri94p9u0bu-3jdhwko170.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -6918,7 +6826,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "7672"
+          "Value": "2186"
         },
         {
           "Name": "Content-Type",
@@ -6926,56 +6834,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"Z9Md03EEQJkwvMKF7ODYs4S3DU9Rjb/L8LDKjLJwV94=\""
+          "Value": "\"ml7fkCp36NLDvaOVM6uPOCUvoLxbM+KgNsH2HTsS8EQ=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 13 May 2025 07:14:57 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "fingerprint",
-          "Value": "rz2p0i3di1"
-        },
-        {
-          "Name": "label",
-          "Value": "css/tenant-custom.css"
-        },
-        {
-          "Name": "integrity",
-          "Value": "sha256-Z9Md03EEQJkwvMKF7ODYs4S3DU9Rjb/L8LDKjLJwV94="
-        }
-      ]
-    },
-    {
-      "Route": "css/tenant-custom.rz2p0i3di1.css.gz",
-      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\ri94p9u0bu-rz2p0i3di1.gz",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "2261"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"+nPSvHmWiu9S0f8YHRxezeoSkJGSclQqpRdwIA4Yt1E=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Tue, 13 May 2025 07:14:57 GMT"
+          "Value": "Sun, 18 May 2025 09:29:13 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -6993,7 +6856,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "rz2p0i3di1"
+          "Value": "3jdhwko170"
         },
         {
           "Name": "label",
@@ -7001,7 +6864,144 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-+nPSvHmWiu9S0f8YHRxezeoSkJGSclQqpRdwIA4Yt1E="
+          "Value": "sha256-ml7fkCp36NLDvaOVM6uPOCUvoLxbM+KgNsH2HTsS8EQ="
+        }
+      ]
+    },
+    {
+      "Route": "css/tenant-custom.css",
+      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\ri94p9u0bu-3jdhwko170.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000457247371"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2186"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"ml7fkCp36NLDvaOVM6uPOCUvoLxbM+KgNsH2HTsS8EQ=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 18 May 2025 09:29:13 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"QfGbYIzdm0DoqtK9hGBGKrzPGxBdALAyZMKhAVgYQj0=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-QfGbYIzdm0DoqtK9hGBGKrzPGxBdALAyZMKhAVgYQj0="
+        }
+      ]
+    },
+    {
+      "Route": "css/tenant-custom.css",
+      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\wwwroot\\css\\tenant-custom.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "7444"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"QfGbYIzdm0DoqtK9hGBGKrzPGxBdALAyZMKhAVgYQj0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 18 May 2025 09:29:13 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-QfGbYIzdm0DoqtK9hGBGKrzPGxBdALAyZMKhAVgYQj0="
+        }
+      ]
+    },
+    {
+      "Route": "css/tenant-custom.css.gz",
+      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\ri94p9u0bu-3jdhwko170.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2186"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"ml7fkCp36NLDvaOVM6uPOCUvoLxbM+KgNsH2HTsS8EQ=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 18 May 2025 09:29:13 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-ml7fkCp36NLDvaOVM6uPOCUvoLxbM+KgNsH2HTsS8EQ="
         }
       ]
     },
@@ -15872,13 +15872,13 @@
       ]
     },
     {
-      "Route": "js/site.aspki182ul.js",
-      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\dm792kjgc6-aspki182ul.gz",
+      "Route": "js/site.cbo4c7lhcw.js",
+      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\dm792kjgc6-cbo4c7lhcw.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000409836066"
+          "Quality": "0.000436681223"
         }
       ],
       "ResponseHeaders": [
@@ -15888,15 +15888,15 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "2439"
+          "Value": "2289"
         },
         {
           "Name": "ETag",
-          "Value": "\"WA9DT4Jo/WfIhFY1M3feUwmFHBad92oi7apg1CTBRww=\""
+          "Value": "\"DzVxm5EESOK/I3Lg4Lm4Zwy8kQFt1Mb9bpl3K7V0MfA=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 13 May 2025 07:14:58 GMT"
+          "Value": "Sun, 18 May 2025 07:29:03 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -15916,13 +15916,13 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"irXN3c8ZhDZQyfDD0PCpdqVtHxWofngwW+ws6y5FDHw=\""
+          "Value": "W/\"GOy7BUa1VY8prs8lgLEX5EscFNXBBK2sMffV5+6t0/g=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "aspki182ul"
+          "Value": "cbo4c7lhcw"
         },
         {
           "Name": "label",
@@ -15930,12 +15930,12 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-irXN3c8ZhDZQyfDD0PCpdqVtHxWofngwW+ws6y5FDHw="
+          "Value": "sha256-GOy7BUa1VY8prs8lgLEX5EscFNXBBK2sMffV5+6t0/g="
         }
       ]
     },
     {
-      "Route": "js/site.aspki182ul.js",
+      "Route": "js/site.cbo4c7lhcw.js",
       "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\wwwroot\\js\\site.js",
       "Selectors": [],
       "ResponseHeaders": [
@@ -15945,7 +15945,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "9242"
+          "Value": "8731"
         },
         {
           "Name": "Content-Type",
@@ -15953,11 +15953,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"irXN3c8ZhDZQyfDD0PCpdqVtHxWofngwW+ws6y5FDHw=\""
+          "Value": "\"GOy7BUa1VY8prs8lgLEX5EscFNXBBK2sMffV5+6t0/g=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 13 May 2025 07:14:58 GMT"
+          "Value": "Sun, 18 May 2025 07:29:03 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -15967,7 +15967,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "aspki182ul"
+          "Value": "cbo4c7lhcw"
         },
         {
           "Name": "label",
@@ -15975,13 +15975,13 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-irXN3c8ZhDZQyfDD0PCpdqVtHxWofngwW+ws6y5FDHw="
+          "Value": "sha256-GOy7BUa1VY8prs8lgLEX5EscFNXBBK2sMffV5+6t0/g="
         }
       ]
     },
     {
-      "Route": "js/site.aspki182ul.js.gz",
-      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\dm792kjgc6-aspki182ul.gz",
+      "Route": "js/site.cbo4c7lhcw.js.gz",
+      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\dm792kjgc6-cbo4c7lhcw.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -15990,7 +15990,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "2439"
+          "Value": "2289"
         },
         {
           "Name": "Content-Type",
@@ -15998,11 +15998,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"WA9DT4Jo/WfIhFY1M3feUwmFHBad92oi7apg1CTBRww=\""
+          "Value": "\"DzVxm5EESOK/I3Lg4Lm4Zwy8kQFt1Mb9bpl3K7V0MfA=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 13 May 2025 07:14:58 GMT"
+          "Value": "Sun, 18 May 2025 07:29:03 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -16020,7 +16020,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "aspki182ul"
+          "Value": "cbo4c7lhcw"
         },
         {
           "Name": "label",
@@ -16028,7 +16028,7 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-WA9DT4Jo/WfIhFY1M3feUwmFHBad92oi7apg1CTBRww="
+          "Value": "sha256-DzVxm5EESOK/I3Lg4Lm4Zwy8kQFt1Mb9bpl3K7V0MfA="
         }
       ]
     },
@@ -16071,12 +16071,12 @@
     },
     {
       "Route": "js/site.js",
-      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\dm792kjgc6-aspki182ul.gz",
+      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\dm792kjgc6-cbo4c7lhcw.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000409836066"
+          "Quality": "0.000436681223"
         }
       ],
       "ResponseHeaders": [
@@ -16086,15 +16086,15 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "2439"
+          "Value": "2289"
         },
         {
           "Name": "ETag",
-          "Value": "\"WA9DT4Jo/WfIhFY1M3feUwmFHBad92oi7apg1CTBRww=\""
+          "Value": "\"DzVxm5EESOK/I3Lg4Lm4Zwy8kQFt1Mb9bpl3K7V0MfA=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 13 May 2025 07:14:58 GMT"
+          "Value": "Sun, 18 May 2025 07:29:03 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -16114,13 +16114,13 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"irXN3c8ZhDZQyfDD0PCpdqVtHxWofngwW+ws6y5FDHw=\""
+          "Value": "W/\"GOy7BUa1VY8prs8lgLEX5EscFNXBBK2sMffV5+6t0/g=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-irXN3c8ZhDZQyfDD0PCpdqVtHxWofngwW+ws6y5FDHw="
+          "Value": "sha256-GOy7BUa1VY8prs8lgLEX5EscFNXBBK2sMffV5+6t0/g="
         }
       ]
     },
@@ -16135,7 +16135,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "9242"
+          "Value": "8731"
         },
         {
           "Name": "Content-Type",
@@ -16143,11 +16143,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"irXN3c8ZhDZQyfDD0PCpdqVtHxWofngwW+ws6y5FDHw=\""
+          "Value": "\"GOy7BUa1VY8prs8lgLEX5EscFNXBBK2sMffV5+6t0/g=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 13 May 2025 07:14:58 GMT"
+          "Value": "Sun, 18 May 2025 07:29:03 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -16157,13 +16157,13 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-irXN3c8ZhDZQyfDD0PCpdqVtHxWofngwW+ws6y5FDHw="
+          "Value": "sha256-GOy7BUa1VY8prs8lgLEX5EscFNXBBK2sMffV5+6t0/g="
         }
       ]
     },
     {
       "Route": "js/site.js.gz",
-      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\dm792kjgc6-aspki182ul.gz",
+      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\obj\\Release\\net9.0\\compressed\\dm792kjgc6-cbo4c7lhcw.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -16172,7 +16172,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "2439"
+          "Value": "2289"
         },
         {
           "Name": "Content-Type",
@@ -16180,11 +16180,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"WA9DT4Jo/WfIhFY1M3feUwmFHBad92oi7apg1CTBRww=\""
+          "Value": "\"DzVxm5EESOK/I3Lg4Lm4Zwy8kQFt1Mb9bpl3K7V0MfA=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 13 May 2025 07:14:58 GMT"
+          "Value": "Sun, 18 May 2025 07:29:03 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -16202,7 +16202,7 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-WA9DT4Jo/WfIhFY1M3feUwmFHBad92oi7apg1CTBRww="
+          "Value": "sha256-DzVxm5EESOK/I3Lg4Lm4Zwy8kQFt1Mb9bpl3K7V0MfA="
         }
       ]
     },

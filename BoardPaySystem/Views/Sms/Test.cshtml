@@ -38,9 +38,9 @@
                         
                         <div class="mb-3">
                             <label asp-for="PhoneNumber" class="control-label"></label>
-                            <input asp-for="PhoneNumber" class="form-control" placeholder="+1234567890" />
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="e.g., +639123456789 or 09123456789" />
                             <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-                            <small class="text-muted">Enter phone number with country code (e.g., +1234567890)</small>
+                            <small class="text-muted">Enter phone number with country code (e.g., +639123456789) or local format (e.g., 09123456789)</small>
                         </div>
                         
                         <div class="mb-3">
@@ -64,23 +64,22 @@
             
             <div class="card mt-4">
                 <div class="card-header bg-light">
-                    <h5 class="mb-0">Semaphore Configuration</h5>
+                    <h5 class="mb-0">IPROG Configuration</h5>
                 </div>
                 <div class="card-body">
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i> Your Semaphore account is configured and ready to use.
+                        <i class="fas fa-info-circle me-2"></i> Your IPROG account is configured and ready to use.
                     </div>
                     
                     <p>
-                        <strong>Sender Name:</strong> <span id="semaphoreSender">BoardPay (from config)</span>
+                        <strong>API Token:</strong> <span id="iprogApiToken">(from config)</span>
                     </p>
                     
                     <div class="alert alert-warning mt-3 mb-0">
                         <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i> Important Notes:</h6>
                         <ul class="mb-0">
-                            <li>SMS messages may incur charges based on your Semaphore plan.</li>
-                            <li>Free trial accounts can only send to verified numbers.</li>
-                            <li>International SMS messages may have additional restrictions.</li>
+                            <li>SMS messages may incur charges based on your IPROG plan.</li>
+                            <li>The IPROG account must have sufficient credits/balance.</li>
                         </ul>
                     </div>
                 </div>
@@ -135,7 +134,7 @@
                     <ul>
                         <li>The tenant must have a valid phone number in their profile.</li>
                         <li>The phone number must include the country code (e.g., +63 for PH).</li>
-                        <li>The Semaphore account must have sufficient credits/balance.</li>
+                        <li>The IPROG account must have sufficient credits/balance.</li>
                     </ul>
                 </div>
             </div>

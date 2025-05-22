@@ -283,6 +283,7 @@ C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\BoardPaySystem.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\BoardPaySystem.RazorAssemblyInfo.cache
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\BoardPaySystem.RazorAssemblyInfo.cs
+C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\BoardPaySystem.sourcelink.json
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\scopedcss\bundle\BoardPaySystem.styles.css
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\scopedcss\projectbundle\BoardPaySystem.bundle.scp.css
@@ -350,9 +351,9 @@ C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\compressed\yfc7ypekbg-mlv21k5csn.gz
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\compressed\eyta2z3lqi-soeidkn2u2.gz
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\compressed\h7rear5xxc-gubxhf7yrw.gz
-C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\compressed\ri94p9u0bu-rz2p0i3di1.gz
+C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\compressed\ri94p9u0bu-3jdhwko170.gz
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\compressed\ebmrh4qx13-61n19gt1b8.gz
-C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\compressed\dm792kjgc6-aspki182ul.gz
+C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\compressed\dm792kjgc6-cbo4c7lhcw.gz
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\compressed\h3ec5ojsta-bqjiyaj88i.gz
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\compressed\vdibx5y46m-c2jlpeoesf.gz
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Release\net9.0\compressed\qkid5oy9gw-erw9l3u2r3.gz

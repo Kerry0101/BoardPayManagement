@@ -1,40 +1,54 @@
 ﻿@{
     Layout = null;
 }
-<link rel="stylesheet" href="~/css/tenant-custom.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<div class="app-container">
-    <div id="tenant-dashboard" class="dashboard">
-        <button class="mobile-menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('active'); document.querySelector('.mobile-menu-overlay').classList.toggle('active');">
-            <i class="fas fa-bars"></i>
-        </button>
-        <div class="mobile-menu-overlay" onclick="document.querySelector('.sidebar').classList.remove('active'); this.classList.remove('active');"></div>
-        <aside class="sidebar">
-            <h2><i class="fas fa-user"></i> Tenant</h2>
-            <nav>
-                <ul>
-                    <li><a asp-action="Bills" asp-controller="Tenant" class="nav-link" data-target="t-bills"><i class="fas fa-file-invoice"></i> My Bills</a></li>
-                    <li><a asp-action="History" asp-controller="Tenant" class="nav-link" data-target="t-history"><i class="fas fa-history"></i> Usage History</a></li>
-                    <li><a asp-action="Profile" asp-controller="Tenant" class="nav-link" data-target="t-profile"><i class="fas fa-id-card"></i> My Profile</a></li>
-                    <li><a asp-action="Notifications" asp-controller="Tenant" class="nav-link" data-target="t-notifications"><i class="fas fa-bell"></i> Notifications</a></li>
-                    <li><a asp-action="SmsPreferences" asp-controller="Tenant" class="nav-link" data-target="t-sms"><i class="fas fa-mobile-alt"></i> SMS Settings</a></li>
-                </ul>
-            </nav>
-            <div class="logout-button">
-                <form asp-controller="Account" asp-action="Logout" method="post">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn-danger">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
-                    </button>
-                </form>
-            </div>
-        </aside>
-        <main class="main-content">
-            <div class="tenant-main-card">
-                @RenderBody()
-            </div>
-        </main>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - Tenant</title>
+    <link rel="stylesheet" href="~/css/tenant-custom.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    @RenderSection("Head", required: false)
+</head>
+<body>
+    <div class="app-container">
+        <div id="tenant-dashboard" class="dashboard">
+            <button class="mobile-menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('active'); document.querySelector('.mobile-menu-overlay').classList.toggle('active');">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="mobile-menu-overlay" onclick="document.querySelector('.sidebar').classList.remove('active'); this.classList.remove('active');"></div>
+            <aside class="sidebar">
+                <h2><i class="fas fa-user"></i> Tenant</h2>
+                <nav>
+                    <ul>
+                        <li><a asp-action="Bills" asp-controller="Tenant" class="nav-link" data-target="t-bills"><i class="fas fa-file-invoice"></i> My Bills</a></li>
+                        <li><a asp-action="History" asp-controller="Tenant" class="nav-link" data-target="t-history"><i class="fas fa-history"></i> Usage History</a></li>
+                        <li><a asp-action="Profile" asp-controller="Tenant" class="nav-link" data-target="t-profile"><i class="fas fa-id-card"></i> My Profile</a></li>
+                        <li><a asp-action="Notifications" asp-controller="Tenant" class="nav-link" data-target="t-notifications"><i class="fas fa-bell"></i> Notifications</a></li>
+                        <!-- <li><a asp-action="SmsPreferences" asp-controller="Tenant" class="nav-link" data-target="t-sms"><i class="fas fa-mobile-alt"></i> SMS Settings</a></li> -->
+                    </ul>
+                </nav>
+                <div class="logout-button">
+                    <form asp-controller="Account" asp-action="Logout" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-danger">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                </div>
+            </aside>
+            <main class="main-content">
+                <div class="tenant-main-card">
+                    @RenderBody()
+                </div>
+            </main>
+        </div>
     </div>
-</div>
-@RenderSection("Scripts", required: false)
+    @RenderSection("Scripts", required: false)
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+</body>
+</html>

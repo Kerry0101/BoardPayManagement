@@ -43,8 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateFeesModal = document.getElementById('update-fees-modal');
     const updateFeesForm = document.getElementById('update-fees-form');
     const updateFeesMessage = document.getElementById('update-fees-message'); // Keep for potential server-side feedback display
-    const gcashBtn = document.querySelector('#tenant-dashboard #t-payment button.btn-success'); // Assumes Tenant dashboard view exists
-    const gcashMessage = document.getElementById('gcash-message');
 
     // --- Helper Functions ---
     function showMessage(element, text, type = 'success', duration = 3000) {
@@ -197,14 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.preventDefault();
                 showMessage(updateFeesMessage, "Please fill in all required fields.", 'danger', 0);
             }
-        });
-    }
-
-    // --- Tenant Page Specific Logic ---
-    // GCash Button click (assuming this INITIATES something, might need AJAX or form post later)
-    if (gcashBtn) {
-        gcashBtn.addEventListener('click', () => {
-            showMessage(gcashMessage, 'Processing GCash payment...', 'info');
         });
     }
 

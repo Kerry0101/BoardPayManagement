@@ -4,26 +4,27 @@
     ViewData["Title"] = "Usage History";
 }
 
-<div class="content-section active">
-    <h3><i class="fas fa-history"></i> Usage History</h3>
-    <p>Your electricity consumption.</p>
-    <table>
-        <thead>
-            <tr>
-                <th>Month</th>
-                <th>Usage (kWh)</th>
-                <th>Cost</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var reading in Model.OrderByDescending(r => r.ReadingDate))
-            {
+
+    <div class="content-section active">
+        <h3><i class="fas fa-history"></i> Usage History</h3>
+        <p>Your electricity consumption.</p>
+        <table>
+            <thead>
                 <tr>
-                    <td>@reading.ReadingDate.ToString("MMMM yyyy")</td>
-                    <td>@reading.UsageKwh.ToString("N2")</td>
-                    <td>₱@reading.TotalCharge.ToString("N2")</td>
+                    <th>Month</th>
+                    <th>Usage (kWh)</th>
+                    <th>Cost</th>
                 </tr>
-            }
-        </tbody>
-    </table>
-</div>
+            </thead>
+            <tbody>
+                @foreach (var reading in Model.OrderByDescending(r => r.ReadingDate))
+                {
+                    <tr>
+                        <td>@reading.ReadingDate.ToString("MMMM yyyy")</td>
+                        <td>@reading.UsageKwh.ToString("N2")</td>
+                        <td>₱@reading.TotalCharge.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>

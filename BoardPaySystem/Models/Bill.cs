@@ -6,7 +6,7 @@ namespace BoardPaySystem.Models
     public enum BillStatus
     {
         NotPaid,    // New status: Bill is created but tenant hasn't initiated payment
-        Pending,    // Payment initiated (via GCash) but not yet approved
+        Pending,    // Payment initiated but not yet approved
         Paid,       // Payment completed and confirmed
         Overdue,    // Payment past due date
         Cancelled,  // Bill cancelled

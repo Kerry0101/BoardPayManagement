@@ -264,6 +264,7 @@ namespace BoardPaySystem.Controllers
                     // Update the room
                     room.IsOccupied = true;
                     room.CurrentTenant = user;
+                    room.TenantId = user.Id;
                     _context.Update(room);
                     await _context.SaveChangesAsync();
                     _logger.LogInformation("Room {RoomId} updated with tenant {UserId}", room.RoomId, user.Id);
@@ -393,6 +394,7 @@ namespace BoardPaySystem.Controllers
 
         public async Task<IActionResult> MeterReadings()
         {
+            ViewBag.Buildings = await _context.Buildings.ToListAsync();
             var tenantsWithRooms = await _context.Users
                 .Where(u => u.RoomId.HasValue)
                 .Include(u => u.CurrentRoom!)
@@ -503,7 +505,8 @@ namespace BoardPaySystem.Controllers
                 _logger.LogInformation("Starting deletion of building with ID {0}", id);
                 // First, load the building with its related entities
                 var building = await _context.Buildings
-                    .Include("Floors.Rooms.CurrentTenant") // Using string-based include to avoid null reference errors
+                    .Include(b => b.Floors)
+                        .ThenInclude(f => f.Rooms)
                     .Include(b => b.Tenants)
                     .FirstOrDefaultAsync(b => b.BuildingId == id);
 
@@ -513,145 +516,24 @@ namespace BoardPaySystem.Controllers
                     return Json(new { success = false, message = "Building not found." });
                 }
 
-                _logger.LogInformation("Building {0} found with {1} floors, {2} rooms, and {3} tenants",
-                    building.BuildingName,
-                    building.Floors?.Count ?? 0,
-                    building.Floors?.Sum(f => f.Rooms?.Count ?? 0) ?? 0,
-                    building.Tenants?.Count ?? 0);
+                // Check for associated data
+                var hasRooms = building.Floors?.Any(f => f.Rooms != null && f.Rooms.Any()) ?? false;
+                var hasTenants = building.Tenants?.Any() ?? false;
+                var roomIds = building.Floors?.SelectMany(f => f.Rooms ?? Enumerable.Empty<Room>()).Select(r => r.RoomId).ToList() ?? new List<int>();
+                var hasContracts = await _context.Contracts.AnyAsync(c => roomIds.Contains(c.RoomId));
+                var hasBills = await _context.Bills.AnyAsync(b => roomIds.Contains(b.RoomId));
+                var hasMeterReadings = await _context.MeterReadings.AnyAsync(m => roomIds.Contains(m.RoomId));
+                var hasPayments = await _context.Payments.AnyAsync(p => _context.Bills.Any(b => b.BillId == p.BillId && roomIds.Contains(b.RoomId)));
+                var hasNotifications = await _context.Notifications.AnyAsync(n => n.BillId != null && _context.Bills.Any(b => b.BillId == n.BillId && roomIds.Contains(b.RoomId)));
 
-                // Using a single transaction for deletion
-                using (var transaction = await _context.Database.BeginTransactionAsync())
+                if (hasRooms || hasTenants || hasContracts || hasBills || hasMeterReadings || hasPayments || hasNotifications)
                 {
-                    try
-                    {
-                        // 1. Clear tenant associations with this building
-                        var usersToUpdate = await _context.Users
-                            .Where(u => u.BuildingId == id)
-                            .ToListAsync();
-
-                        foreach (var user in usersToUpdate)
-                        {
-                            _logger.LogInformation("Detaching user {0} from building {1}", user.Id, id);
-                            user.BuildingId = null;
-                            _context.Update(user);
-                        }
-                        await _context.SaveChangesAsync();
-
-                        // 2. Clear CurrentTenant references and IsOccupied flags on all rooms
-                        if (building.Floors != null)
-                        {
-                            foreach (var floor in building.Floors)
-                            {
-                                if (floor.Rooms != null)
-                                {
-                                    foreach (var room in floor.Rooms.Where(r => r.CurrentTenant != null).ToList())
-                                    {
-                                        if (room.CurrentTenant != null)
-                                        {
-                                            room.CurrentTenant.RoomId = null;
-                                            _context.Update(room.CurrentTenant);
-                                        }
-                                        room.CurrentTenant = null;
-                                        room.TenantId = null;
-                                        room.IsOccupied = false;
-                                        _context.Update(room);
-                                    }
-                                }
-                            }
-                            await _context.SaveChangesAsync();
-                        }
-
-                        // 3. Get all room IDs in this building
-                        var roomIds = building.Floors?
-                            .SelectMany(f => f.Rooms ?? Enumerable.Empty<Room>())
-                            .Select(r => r.RoomId)
-                            .ToList() ?? new List<int>();
-
-                        // 4. Delete all bills associated with these rooms
-                        if (roomIds.Any())
-                        {
-                            var billsToDelete = await _context.Bills
-                                .Where(b => roomIds.Contains(b.RoomId))
-                                .ToListAsync();
-
-                            if (billsToDelete.Any())
-                            {
-                                _logger.LogInformation("Deleting {0} bills", billsToDelete.Count);
-
-                                // 5. Delete all payments associated with these bills
-                                var billIds = billsToDelete.Select(b => (int?)b.BillId).ToList();
-                                var paymentsToDelete = await _context.Payments
-                                    .Where(p => billIds.Contains(p.BillId))
-                                    .ToListAsync();
-
-                                if (paymentsToDelete.Any())
-                                {
-                                    _logger.LogInformation("Deleting {0} payments", paymentsToDelete.Count);
-                                    _context.Payments.RemoveRange(paymentsToDelete);
-                                    await _context.SaveChangesAsync();
-                                }
-
-                                _context.Bills.RemoveRange(billsToDelete);
-                                await _context.SaveChangesAsync();
-                            }
-
-                            // 6. Delete all contracts associated with these rooms
-                            var contractsToDelete = await _context.Contracts
-                                .Where(c => roomIds.Contains(c.RoomId))
-                                .ToListAsync();
-
-                            if (contractsToDelete.Any())
-                            {
-                                _logger.LogInformation("Deleting {0} contracts", contractsToDelete.Count);
-                                _context.Contracts.RemoveRange(contractsToDelete);
-                                await _context.SaveChangesAsync();
-                            }
-
-                            // 7. Delete all meter readings associated with these rooms
-                            var meterReadingsToDelete = await _context.MeterReadings
-                                .Where(m => roomIds.Contains(m.RoomId))
-                                .ToListAsync();
-
-                            if (meterReadingsToDelete.Any())
-                            {
-                                _logger.LogInformation("Deleting {0} meter readings", meterReadingsToDelete.Count);
-                                _context.MeterReadings.RemoveRange(meterReadingsToDelete);
-                                await _context.SaveChangesAsync();
-                            }
-                        }
-
-                        // 8. For each floor, clear the rooms collection first
-                        if (building.Floors != null)
-                        {
-                            foreach (var floor in building.Floors)
-                            {
-                                if (floor.Rooms != null && floor.Rooms.Any())
-                                {
-                                    _context.Rooms.RemoveRange(floor.Rooms);
-                                }
-                            }
-                            await _context.SaveChangesAsync();
-
-                            // 9. Now remove all floors
-                            _context.Floors.RemoveRange(building.Floors);
-                            await _context.SaveChangesAsync();
-                        }
-
-                        // 10. Finally delete the building
-                        _context.Buildings.Remove(building);
-                        await _context.SaveChangesAsync();
-
-                        await transaction.CommitAsync();
-                        _logger.LogInformation("Building {0} successfully deleted", building.BuildingName);
-                        return Json(new { success = true, message = "Building successfully deleted" });
-                    }
-                    catch (Exception ex)
-                    {
-                        await transaction.RollbackAsync();
-                        _logger.LogError("Error deleting building: " + ex.Message);
-                        return Json(new { success = false, message = "Error deleting building: " + ex.Message });
-                    }
+                    return Json(new { success = false, message = "Cannot delete building: There is associated data (rooms, tenants, contracts, bills, meter readings, payments, or notifications). Please remove all related data first." });
                 }
+
+                _context.Buildings.Remove(building);
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Building successfully deleted." });
             }
             catch (Exception ex)
             {
@@ -664,155 +546,181 @@ namespace BoardPaySystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ForceDeleteBuilding(int id)
         {
+            // Revert to safe delete: do not delete if associated data exists
+            return await DeleteBuilding(id);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EmergencyDeleteBuilding(int id)
+        {
             try
             {
-                _logger.LogInformation("Starting force deletion of building with ID {0}", id);
+                _logger.LogWarning("Starting EMERGENCY deletion of building with ID {0}", id);
 
-                // Direct database operations to clean up related entities
-                using (var transaction = await _context.Database.BeginTransactionAsync())
+                // First check if the building exists
+                var building = await _context.Buildings.FindAsync(id);
+                if (building == null)
                 {
-                    try
+                    _logger.LogWarning("Building {0} not found for emergency deletion", id);
+                    return Json(new { success = false, message = "Building not found" });
+                }
+
+                // Use a direct connection to execute SQL commands
+                var connectionString = _context.Database.GetConnectionString();
+                using (var connection = new Microsoft.Data.SqlClient.SqlConnection(connectionString))
+                {
+                    await connection.OpenAsync();
+                    using (var transaction = connection.BeginTransaction())
                     {
-                        // 1. Get all rooms in the building via floors
-                        var floorsInBuilding = await _context.Floors
-                            .Where(f => f.BuildingId == id)
-                            .ToListAsync();
-
-                        var floorIds = floorsInBuilding.Select(f => f.FloorId).ToList();
-
-                        var roomsInBuilding = await _context.Rooms
-                            .Where(r => floorIds.Contains(r.FloorId))
-                            .ToListAsync();
-
-                        var roomIds = roomsInBuilding.Select(r => r.RoomId).ToList();
-
-                        // 2. Delete all payments associated with bills for these rooms
-                        var billsForRooms = await _context.Bills
-                            .Where(b => roomIds.Contains(b.RoomId))
-                            .ToListAsync();
-
-                        var billIds = billsForRooms.Select(b => b.BillId).ToList();
-
-                        var paymentsToDelete = await _context.Payments
-                            .Where(p => billIds.Contains(p.BillId))
-                            .ToListAsync();
-
-                        if (paymentsToDelete.Any())
-                        {
-                            _logger.LogInformation("Force deleting {0} payments", paymentsToDelete.Count);
-                            _context.Payments.RemoveRange(paymentsToDelete);
-                            await _context.SaveChangesAsync();
-                        }
-
-                        // 3. Delete all bills associated with these rooms
-                        if (billsForRooms.Any())
-                        {
-                            _logger.LogInformation("Force deleting {0} bills", billsForRooms.Count);
-                            _context.Bills.RemoveRange(billsForRooms);
-                            await _context.SaveChangesAsync();
-                        }
-
-                        // 4. Delete all contracts associated with these rooms
-                        var contractsToDelete = await _context.Contracts
-                            .Where(c => roomIds.Contains(c.RoomId))
-                            .ToListAsync();
-
-                        if (contractsToDelete.Any())
-                        {
-                            _logger.LogInformation("Force deleting {0} contracts", contractsToDelete.Count);
-                            _context.Contracts.RemoveRange(contractsToDelete);
-                            await _context.SaveChangesAsync();
-                        }
-
-                        // 5. Try to delete meter readings - handle if table doesn't exist
                         try
                         {
-                            var meterReadingsExist = await _context.Database.ExecuteSqlRawAsync("SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'MeterReadings'") > 0;
+                            _logger.LogWarning("Starting emergency SQL deletion for building {0} ({1})",
+                                building.BuildingId, building.BuildingName);
 
-                            if (meterReadingsExist)
-                            {
-                                var meterReadingsToDelete = await _context.MeterReadings
-                                    .Where(m => roomIds.Contains(m.RoomId))
-                                    .ToListAsync();
+                            // Execute SQL commands in the correct order to delete everything
 
-                                if (meterReadingsToDelete.Any())
-                                {
-                                    _logger.LogInformation("Force deleting {0} meter readings", meterReadingsToDelete.Count);
-                                    _context.MeterReadings.RemoveRange(meterReadingsToDelete);
-                                    await _context.SaveChangesAsync();
-                                }
-                            }
-                            else
+                            // 1. Update users to remove references to rooms and buildings
+                            using (var command = connection.CreateCommand())
                             {
-                                _logger.LogWarning("MeterReadings table does not exist - skipping meter readings deletion");
+                                command.Transaction = transaction;
+                                command.CommandText = @"
+                                    UPDATE AspNetUsers
+                                    SET RoomId = NULL, BuildingId = NULL
+                                    WHERE BuildingId = @buildingId OR RoomId IN (SELECT RoomId FROM Rooms WHERE FloorId IN (SELECT FloorId FROM Floors WHERE BuildingId = @buildingId))";
+                                command.Parameters.AddWithValue("@buildingId", id);
+                                await command.ExecuteNonQueryAsync();
                             }
+                            _logger.LogWarning("Updated users to remove building and room references");
+
+                            // 2. Delete payments related to bills in these rooms
+                            using (var command = connection.CreateCommand())
+                            {
+                                command.Transaction = transaction;
+                                command.CommandText = @"
+                                    DELETE FROM Payments
+                                    WHERE BillId IN (SELECT BillId FROM Bills WHERE RoomId IN (SELECT RoomId FROM Rooms WHERE FloorId IN (SELECT FloorId FROM Floors WHERE BuildingId = @buildingId)))";
+                                command.Parameters.AddWithValue("@buildingId", id);
+                                await command.ExecuteNonQueryAsync();
+                            }
+                            _logger.LogWarning("Deleted payments related to building");
+
+                            // 3. Delete notifications related to bills in these rooms
+                            using (var command = connection.CreateCommand())
+                            {
+                                command.Transaction = transaction;
+                                command.CommandText = @"
+                                    DELETE FROM Notifications
+                                    WHERE BillId IN (SELECT BillId FROM Bills WHERE RoomId IN (SELECT RoomId FROM Rooms WHERE FloorId IN (SELECT FloorId FROM Floors WHERE BuildingId = @buildingId)))";
+                                command.Parameters.AddWithValue("@buildingId", id);
+                                await command.ExecuteNonQueryAsync();
+                            }
+                            _logger.LogWarning("Deleted notifications related to building");
+
+                            // 4. Delete meter readings related to these rooms or bills
+                            using (var command = connection.CreateCommand())
+                            {
+                                command.Transaction = transaction;
+                                command.CommandText = @"
+                                    DELETE FROM MeterReadings
+                                    WHERE RoomId IN (SELECT RoomId FROM Rooms WHERE FloorId IN (SELECT FloorId FROM Floors WHERE BuildingId = @buildingId))
+                                    OR BillId IN (SELECT BillId FROM Bills WHERE RoomId IN (SELECT RoomId FROM Rooms WHERE FloorId IN (SELECT FloorId FROM Floors WHERE BuildingId = @buildingId)))";
+                                command.Parameters.AddWithValue("@buildingId", id);
+                                await command.ExecuteNonQueryAsync();
+                            }
+                            _logger.LogWarning("Deleted meter readings related to building");
+
+                            // 5. Delete bills related to these rooms
+                            using (var command = connection.CreateCommand())
+                            {
+                                command.Transaction = transaction;
+                                command.CommandText = @"
+                                    DELETE FROM Bills
+                                    WHERE RoomId IN (SELECT RoomId FROM Rooms WHERE FloorId IN (SELECT FloorId FROM Floors WHERE BuildingId = @buildingId))";
+                                command.Parameters.AddWithValue("@buildingId", id);
+                                await command.ExecuteNonQueryAsync();
+                            }
+                            _logger.LogWarning("Deleted bills related to building");
+
+                            // 6. Delete contracts related to these rooms
+                            using (var command = connection.CreateCommand())
+                            {
+                                command.Transaction = transaction;
+                                command.CommandText = @"
+                                    DELETE FROM Contracts
+                                    WHERE RoomId IN (SELECT RoomId FROM Rooms WHERE FloorId IN (SELECT FloorId FROM Floors WHERE BuildingId = @buildingId))";
+                                command.Parameters.AddWithValue("@buildingId", id);
+                                await command.ExecuteNonQueryAsync();
+                            }
+                            _logger.LogWarning("Deleted contracts related to building");
+
+                            // 7. Update rooms to clear tenant references
+                            using (var command = connection.CreateCommand())
+                            {
+                                command.Transaction = transaction;
+                                command.CommandText = @"
+                                    UPDATE Rooms
+                                    SET TenantId = NULL, IsOccupied = 0
+                                    WHERE FloorId IN (SELECT FloorId FROM Floors WHERE BuildingId = @buildingId)";
+                                command.Parameters.AddWithValue("@buildingId", id);
+                                await command.ExecuteNonQueryAsync();
+                            }
+                            _logger.LogWarning("Updated rooms to clear tenant references");
+
+                            // 8. Delete rooms
+                            using (var command = connection.CreateCommand())
+                            {
+                                command.Transaction = transaction;
+                                command.CommandText = @"
+                                    DELETE FROM Rooms
+                                    WHERE FloorId IN (SELECT FloorId FROM Floors WHERE BuildingId = @buildingId)";
+                                command.Parameters.AddWithValue("@buildingId", id);
+                                await command.ExecuteNonQueryAsync();
+                            }
+                            _logger.LogWarning("Deleted rooms related to building");
+
+                            // 9. Delete floors
+                            using (var command = connection.CreateCommand())
+                            {
+                                command.Transaction = transaction;
+                                command.CommandText = @"
+                                    DELETE FROM Floors
+                                    WHERE BuildingId = @buildingId";
+                                command.Parameters.AddWithValue("@buildingId", id);
+                                await command.ExecuteNonQueryAsync();
+                            }
+                            _logger.LogWarning("Deleted floors related to building");
+
+                            // 10. Finally delete the building
+                            using (var command = connection.CreateCommand())
+                            {
+                                command.Transaction = transaction;
+                                command.CommandText = @"
+                                    DELETE FROM Buildings
+                                    WHERE BuildingId = @buildingId";
+                                command.Parameters.AddWithValue("@buildingId", id);
+                                await command.ExecuteNonQueryAsync();
+                            }
+                            _logger.LogWarning("Deleted building {0}", id);
+
+                            // Commit the transaction
+                            transaction.Commit();
+                            _logger.LogWarning("Transaction committed successfully. Building and all related data deleted.");
+
+                            return Json(new { success = true, message = "Building and all related data successfully deleted using emergency method" });
                         }
                         catch (Exception ex)
                         {
-                            // Log the error but continue with the deletion process
-                            _logger.LogWarning("Error accessing MeterReadings table: {0}. Continuing deletion process.", ex.Message);
+                            transaction.Rollback();
+                            _logger.LogError(ex, "Error in emergency delete: {Message}", ex.Message);
+                            return Json(new { success = false, message = "Error deleting building: " + ex.Message });
                         }
-
-                        // 6. Force update any users that reference this building or rooms
-                        var usersToUpdate = await _context.Users
-                            .Where(u => u.BuildingId == id || (u.RoomId.HasValue && roomIds.Contains(u.RoomId.Value)))
-                            .ToListAsync();
-
-                        foreach (var user in usersToUpdate)
-                        {
-                            _logger.LogWarning("Force detaching user {0} from building {1}", user.Id, id);
-                            user.BuildingId = null;
-                            user.RoomId = null;
-                            _context.Update(user);
-                        }
-                        await _context.SaveChangesAsync();
-
-                        // 7. Delete all rooms
-                        if (roomsInBuilding.Any())
-                        {
-                            _logger.LogInformation("Force deleting {0} rooms", roomsInBuilding.Count);
-                            _context.Rooms.RemoveRange(roomsInBuilding);
-                            await _context.SaveChangesAsync();
-                        }
-
-                        // 8. Delete all floors
-                        if (floorsInBuilding.Any())
-                        {
-                            _logger.LogInformation("Force deleting {0} floors", floorsInBuilding.Count);
-                            _context.Floors.RemoveRange(floorsInBuilding);
-                            await _context.SaveChangesAsync();
-                        }
-
-                        // 9. Finally delete the building
-                        var building = await _context.Buildings.FindAsync(id);
-                        if (building != null)
-                        {
-                            _logger.LogInformation("Force deleting building {0}", building.BuildingName);
-                            _context.Buildings.Remove(building);
-                            await _context.SaveChangesAsync();
-
-                            // Commit transaction
-                            await transaction.CommitAsync();
-                            return Json(new { success = true, message = "Building and all related data successfully deleted" });
-                        }
-                        else
-                        {
-                            _logger.LogWarning("Building {0} not found for force deletion", id);
-                            return Json(new { success = false, message = "Building not found" });
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // Rollback transaction on error
-                        await transaction.RollbackAsync();
-                        _logger.LogError("Error in force delete: {0}", ex.Message);
-                        return Json(new { success = false, message = "Error deleting building: " + ex.Message });
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError("Critical error in ForceDeleteBuilding: {0}", ex.Message);
+                _logger.LogError("Critical error in EmergencyDeleteBuilding: {0}", ex);
                 return Json(new { success = false, message = "Critical error: " + ex.Message });
             }
         }
@@ -918,15 +826,18 @@ namespace BoardPaySystem.Controllers
             var tenant = await _userManager.FindByIdAsync(Id);
             if (tenant == null)
                 return Json(new { success = false, message = "Tenant not found." });
-            if (string.IsNullOrWhiteSpace(FirstName) || string.IsNullOrWhiteSpace(LastName) || string.IsNullOrWhiteSpace(UserName) || string.IsNullOrWhiteSpace(PhoneNumber) || string.IsNullOrWhiteSpace(StartDate))
+            if (string.IsNullOrWhiteSpace(FirstName) || string.IsNullOrWhiteSpace(LastName) || string.IsNullOrWhiteSpace(UserName) || string.IsNullOrWhiteSpace(PhoneNumber))
                 return Json(new { success = false, message = "All fields are required." });
             tenant.FirstName = FirstName;
             tenant.LastName = LastName;
             tenant.UserName = UserName;
             tenant.NormalizedUserName = UserName.ToUpperInvariant();
             tenant.PhoneNumber = PhoneNumber;
-            if (DateTime.TryParse(StartDate, out var parsedDate))
-                tenant.StartDate = parsedDate;
+            if (!string.IsNullOrWhiteSpace(StartDate))
+            {
+                if (DateTime.TryParse(StartDate, out var parsedDate))
+                    tenant.StartDate = parsedDate;
+            }
             // Change password if provided
             if (!string.IsNullOrWhiteSpace(Password) || !string.IsNullOrWhiteSpace(ConfirmPassword))
             {
@@ -1039,23 +950,29 @@ namespace BoardPaySystem.Controllers
         }
 
         [HttpGet]
-        public async Task<JsonResult> GetFloors(int id)
+        public async Task<JsonResult> GetFloors(int buildingId)
         {
-            _logger.LogInformation("GetFloors called with id={0}", id);
+            try
+            {
+                _logger.LogInformation($"GetFloors called with buildingId={buildingId}");
 
-            var floors = await _context.Floors
-                .Where(f => f.BuildingId == id)
-                .OrderBy(f => f.FloorNumber)
-                .Select(f => new
-                {
-                    FloorId = f.FloorId,
-                    displayName = $"{f.FloorName} (Floor {f.FloorNumber})"
-                })
-                .ToListAsync();
+                var floors = await _context.Floors
+                    .Where(f => f.BuildingId == buildingId)
+                    .Select(f => new {
+                        f.FloorId,
+                        f.FloorName,
+                        displayName = f.FloorName + " (Floor " + f.FloorNumber + ")"
+                    })
+                    .ToListAsync();
 
-            _logger.LogInformation("Found {0} floors for building {1}", floors.Count, id);
-
-            return Json(new { success = true, data = floors });
+                _logger.LogInformation($"Returning {floors.Count} floors for building {buildingId}");
+                return Json(floors);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error in GetFloors for buildingId={buildingId}: {ex.Message}");
+                return Json(new { error = ex.Message, data = new object[] { } });
+            }
         }
 
         [HttpPost]
@@ -1690,6 +1607,104 @@ namespace BoardPaySystem.Controllers
             var total = bills.Sum(b => b.TotalAmount);
             var periods = bills.Select(b => b.BillingPeriod).ToList();
             return Json(new { hasUnpaid = true, total, periods });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTenants(int floorId)
+        {
+            try
+            {
+                _logger.LogInformation($"GetTenants called with floorId={floorId}");
+
+                // First, check if the floor exists
+                var floor = await _context.Floors.FindAsync(floorId);
+                if (floor == null)
+                {
+                    _logger.LogWarning($"Floor with ID {floorId} not found");
+                    return Json(new { error = "Floor not found", tenants = new object[] { } });
+                }
+
+                // Get all rooms with tenants on this floor
+                var rooms = await _context.Rooms
+                    .Where(r => r.FloorId == floorId)
+                    .ToListAsync();
+
+                _logger.LogInformation($"Found {rooms.Count} rooms on floor {floorId}");
+
+                // Print detailed room info for debugging
+                foreach (var room in rooms)
+                {
+                    _logger.LogInformation($"Room {room.RoomId} - RoomNumber: {room.RoomNumber}, TenantId: {room.TenantId ?? "null"}");
+                }
+
+                // Get rooms with tenants (non-null TenantId)
+                var roomsWithTenants = rooms.Where(r => r.TenantId != null).ToList();
+                _logger.LogInformation($"Found {roomsWithTenants.Count} rooms with tenants on floor {floorId}");
+
+                if (!roomsWithTenants.Any())
+                {
+                    _logger.LogWarning($"No rooms with tenants found on floor {floorId}");
+                    return Json(new object[] { });
+                }
+
+                // Get tenant IDs (safely)
+                var tenantIds = new List<string>();
+                foreach (var room in roomsWithTenants)
+                {
+                    if (!string.IsNullOrEmpty(room.TenantId))
+                    {
+                        tenantIds.Add(room.TenantId);
+                    }
+                }
+
+                _logger.LogInformation($"Tenant IDs: {string.Join(", ", tenantIds)}");
+
+                if (!tenantIds.Any())
+                {
+                    _logger.LogWarning("No valid tenant IDs found");
+                    return Json(new object[] { });
+                }
+
+                // Get tenant details
+                var tenants = await _context.Users
+                    .Where(u => tenantIds.Contains(u.Id))
+                    .Select(u => new {
+                        TenantId = u.Id,
+                        TenantName = u.FirstName + " " + u.LastName
+                    })
+                    .ToListAsync();
+
+                _logger.LogInformation($"Returning {tenants.Count} tenants for floor {floorId}");
+
+                // For debugging, check if the tenant details were found
+                if (tenants.Count != tenantIds.Count)
+                {
+                    _logger.LogWarning($"Not all tenants were found. IDs requested: {tenantIds.Count}, found: {tenants.Count}");
+                }
+
+                return Json(tenants);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error in GetTenants for floorId={floorId}: {ex.Message}");
+                return Json(new { error = ex.Message, tenants = new object[] { } });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTenantByRoom(int roomId)
+        {
+            var room = await _context.Rooms.FirstOrDefaultAsync(r => r.RoomId == roomId);
+            if (room == null || string.IsNullOrEmpty(room.TenantId))
+            {
+                return Json(new { tenantId = (string?)null, tenantName = (string?)null });
+            }
+            var tenant = await _context.Users.FirstOrDefaultAsync(u => u.Id == room.TenantId);
+            if (tenant == null)
+            {
+                return Json(new { tenantId = (string?)null, tenantName = (string?)null });
+            }
+            return Json(new { tenantId = tenant.Id, tenantName = tenant.FirstName + " " + tenant.LastName });
         }
     }
 }

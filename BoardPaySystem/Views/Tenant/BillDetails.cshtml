@@ -1,166 +1,152 @@
 @model BoardPaySystem.Models.Bill
 @{
+    Layout = "_TenantLayout";
     ViewData["Title"] = "Bill Details";
+    bool isOverdue = ViewBag.IsOverdue != null && ViewBag.IsOverdue;
+    int daysOverdue = ViewBag.DaysOverdue != null ? (int)ViewBag.DaysOverdue : 0;
+    decimal lateFeePercentage = ViewBag.LateFeePercentage != null ? (decimal)ViewBag.LateFeePercentage : 0;
+    decimal adjustedRent = ViewBag.AdjustedRent != null ? (decimal)ViewBag.AdjustedRent : Model.MonthlyRent;
+    decimal adjustedWaterFee = ViewBag.AdjustedWaterFee != null ? (decimal)ViewBag.AdjustedWaterFee : Model.WaterFee;
+    decimal adjustedElectricityFee = ViewBag.AdjustedElectricityFee != null ? (decimal)ViewBag.AdjustedElectricityFee : Model.ElectricityFee;
+    decimal adjustedWifiFee = ViewBag.AdjustedWifiFee != null ? (decimal)ViewBag.AdjustedWifiFee : Model.WifiFee;
+    decimal totalLateFee = ViewBag.TotalLateFee != null ? (decimal)ViewBag.TotalLateFee : 0;
+    decimal adjustedTotal = ViewBag.AdjustedTotal != null ? (decimal)ViewBag.AdjustedTotal : Model.TotalAmount;
 }
 
-<div class="container mt-4">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a asp-action="Index">Dashboard</a></li>
-            <li class="breadcrumb-item"><a asp-action="Bills">My Bills</a></li>
-            <li class="breadcrumb-item active">Bill Details</li>
-        </ol>
-    </nav>
-    
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1 class="mb-3">Bill Details</h1>
-        </div>
-        <div class="col-md-4 text-md-end">
-            @if (Model.Status == BoardPaySystem.Models.BillStatus.NotPaid || Model.Status == BoardPaySystem.Models.BillStatus.Overdue)
-            {
-                <a asp-action="Payment" asp-route-id="@Model.BillId" class="btn btn-success">
-                    <i class="fas fa-money-bill-wave"></i> Make Payment
-                </a>
-            }
-        </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Bill Information</h5>
+    <div class="content-section active">
+        <h3 class="mb-3"><i class="fas fa-file-invoice"></i> Bill Details</h3>
+        @if (isOverdue)
+        {
+            <div class="alert alert-danger mb-4">
+                <h5 class="alert-heading">Overdue Bill - @daysOverdue days late</h5>
+                <p>This bill is overdue and a late payment fee of <strong>@lateFeePercentage.ToString("N2")%</strong> has been applied to all charges.</p>
+                <div class="row">
+                    <div class="col-md-7">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <td>Original Bill Amount:</td>
+                                <td class="text-end">@Model.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                            </tr>
+                            <tr>
+                                <td>Late Fee (@lateFeePercentage.ToString("N2")% of @Model.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH")))</td>
+                                <td class="text-end">+ @totalLateFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                            </tr>
+                            <tr class="fw-bold">
+                                <td>New Total Amount Due:</td>
+                                <td class="text-end">@adjustedTotal.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-4 fw-bold">Bill Number:</div>
-                        <div class="col-md-8">@Model.BillId</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4 fw-bold">Billing Period:</div>
-                        <div class="col-md-8">@Model.BillingDate.ToString("MMMM yyyy")</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4 fw-bold">Room:</div>
-                        <div class="col-md-8">@Model.Room?.RoomNumber, @Model.Room?.Floor?.Building?.BuildingName</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4 fw-bold">Issue Date:</div>
-                        <div class="col-md-8">@Model.BillingDate.ToString("MMM dd, yyyy")</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4 fw-bold">Due Date:</div>
-                        <div class="col-md-8">
-                            @if (Model.Status == BoardPaySystem.Models.BillStatus.Overdue)
-                            {
-                                <span class="text-danger fw-bold">@Model.DueDate.ToString("MMM dd, yyyy") (Overdue)</span>
-                            }
-                            else
-                            {
-                                @Model.DueDate.ToString("MMM dd, yyyy")
-                            }
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4 fw-bold">Status:</div>
-                        <div class="col-md-8">
-                            @switch (Model.Status)
-                            {
-                                case BoardPaySystem.Models.BillStatus.NotPaid:
-                                    <span class="badge bg-warning text-dark">Not Paid</span>
-                                    break;
-                                case BoardPaySystem.Models.BillStatus.Overdue:
-                                    <span class="badge bg-danger">Overdue</span>
-                                    break;
-                                case BoardPaySystem.Models.BillStatus.Pending:
-                                    <span class="badge bg-info">Payment Pending</span>
-                                    break;
-                                case BoardPaySystem.Models.BillStatus.Paid:
-                                    <span class="badge bg-success">Paid</span>
-                                    break;
-                                case BoardPaySystem.Models.BillStatus.Cancelled:
-                                    <span class="badge bg-secondary">Cancelled</span>
-                                    break;
-                            }
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4 fw-bold">Total Amount:</div>
-                        <div class="col-md-8 fw-bold fs-5">@Model.TotalAmount.ToString("C")</div>
-                    </div>
+            </div>
+        }
+        <div class="row">
+            <div class="col-md-7">
+                <div class="info-card mb-4">
+                    <h4>Bill Information</h4>
+                    <!-- <p><strong>Bill Number:</strong> @Model.BillId</p> -->
+                    <p><strong>Billing Period:</strong> @Model.BillingDate.ToString("MMMM yyyy")</p>
+                    <p><strong>Room:</strong> @Model.Room?.RoomNumber, @Model.Room?.Floor?.Building?.BuildingName</p>
+                    <!-- <p><strong>Issue Date:</strong> @Model.BillingDate.ToString("MMM dd, yyyy")</p> -->
+                    <p><strong>Due Date:</strong> @Model.DueDate.ToString("MMM dd, yyyy")</p>
+                    <p><strong>Status:</strong> @switch (Model.Status) {
+                        case BoardPaySystem.Models.BillStatus.NotPaid:
+                            @:<span class="badge bg-warning text-dark">Not Paid</span>
+                            break;
+                        case BoardPaySystem.Models.BillStatus.Overdue:
+                            @:<span class="badge bg-danger">Overdue</span>
+                            break;
+                        case BoardPaySystem.Models.BillStatus.Pending:
+                            @:<span class="badge bg-info">Payment Pending</span>
+                            break;
+                        case BoardPaySystem.Models.BillStatus.Paid:
+                            @:<span class="badge bg-success">Paid</span>
+                            break;
+                        case BoardPaySystem.Models.BillStatus.Cancelled:
+                            @:<span class="badge bg-secondary">Cancelled</span>
+                            break;
+                    }</p>
+                    <p><strong>Total Amount:</strong> <span class="fw-bold fs-5">@((isOverdue ? adjustedTotal : Model.TotalAmount).ToString("C", new System.Globalization.CultureInfo("en-PH")))</span></p>
                     @if (Model.Status == BoardPaySystem.Models.BillStatus.Paid)
                     {
-                        <div class="row mb-3">
-                            <div class="col-md-4 fw-bold">Payment Date:</div>
-                            <div class="col-md-8">@Model.PaymentDate?.ToString("MMM dd, yyyy")</div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-4 fw-bold">Payment Reference:</div>
-                            <div class="col-md-8">@Model.PaymentReference</div>
-                        </div>
+                        <p><strong>Payment Date:</strong> @Model.PaymentDate?.ToString("MMM dd, yyyy")</p>
+                        <p><strong>Payment Reference:</strong> @Model.PaymentReference</p>
                     }
                     @if (!string.IsNullOrEmpty(Model.Notes))
                     {
-                        <div class="row mb-3">
-                            <div class="col-md-4 fw-bold">Notes:</div>
-                            <div class="col-md-8">@Model.Notes</div>
-                        </div>
+                        <p><strong>Notes:</strong> @Model.Notes</p>
                     }
                 </div>
             </div>
-            
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <h5 class="mb-0">Bill Breakdown</h5>
-                </div>
-                <div class="card-body">
+            <div class="col-md-5">
+                <div class="info-card">
+                    <h4>Charges Breakdown</h4>
                     <div class="table-responsive">
                         <table class="table table-bordered">
                             <thead class="table-light">
                                 <tr>
                                     <th>Description</th>
                                     <th class="text-end">Amount</th>
+                                    @if (isOverdue)
+                                    {
+                                        <th class="text-end">After Late Fee</th>
+                                    }
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
                                     <td>Room Rent</td>
-                                    <td class="text-end">@Model.Room?.RentAmount.ToString("C")</td>
+                                    <td class="text-end">@Model.MonthlyRent.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                    @if (isOverdue)
+                                    {
+                                        <td class="text-end">@adjustedRent.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                    }
                                 </tr>
                                 @if (Model.WaterFee > 0)
                                 {
                                     <tr>
                                         <td>Water Charge</td>
-                                        <td class="text-end">@Model.WaterFee.ToString("C")</td>
+                                        <td class="text-end">@Model.WaterFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        @if (isOverdue)
+                                        {
+                                            <td class="text-end">@adjustedWaterFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        }
                                     </tr>
                                 }
                                 @if (Model.ElectricityFee > 0)
                                 {
                                     <tr>
                                         <td>Electricity Charge</td>
-                                        <td class="text-end">@Model.ElectricityFee.ToString("C")</td>
+                                        <td class="text-end">@Model.ElectricityFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        @if (isOverdue)
+                                        {
+                                            <td class="text-end">@adjustedElectricityFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        }
                                     </tr>
                                 }
-                                @if (Model.OtherFees > 0)
+                                @if (Model.WifiFee > 0)
                                 {
                                     <tr>
-                                        <td>Other Charges</td>
-                                        <td class="text-end">@(Model.OtherFees?.ToString("C"))</td>
+                                        <td>WiFi Charge</td>
+                                        <td class="text-end">@Model.WifiFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        @if (isOverdue)
+                                        {
+                                            <td class="text-end">@adjustedWifiFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        }
                                     </tr>
                                 }
-                                @if (Model.LateFee > 0)
+                                @if (isOverdue)
                                 {
-                                    <tr>
-                                        <td>Late Fee</td>
-                                        <td class="text-end text-danger">@(Model.LateFee?.ToString("C"))</td>
+                                    <tr class="table-danger">
+                                        <td colspan="2" class="fw-bold">Late Fee (@lateFeePercentage.ToString("N2")%)</td>
+                                        <td class="text-end fw-bold">@totalLateFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                     </tr>
                                 }
                             </tbody>
                             <tfoot>
                                 <tr class="table-primary">
                                     <td class="fw-bold">Total Amount Due</td>
-                                    <td class="text-end fw-bold">@Model.TotalAmount.ToString("C")</td>
+                                    <td class="text-end fw-bold" colspan="@(isOverdue ? 2 : 1)">@Model.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -168,66 +154,4 @@
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-4">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">Payment Instructions</h5>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info mb-3" role="alert">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Please use the information below to make your payment and include the Bill Reference Number in your payment details.
-                    </div>
-                    
-                    <p><strong>Payment Methods:</strong></p>
-                    <ul>
-                        <li>Bank Transfer</li>
-                        <li>Mobile Payment</li>
-                        <li>Cash Payment (in person)</li>
-                    </ul>
-                    
-                    <p><strong>Bank Details:</strong></p>
-                    <table class="table table-sm">
-                        <tbody>
-                            <tr>
-                                <td>Bank Name:</td>
-                                <td>ABC Bank</td>
-                            </tr>
-                            <tr>
-                                <td>Account Number:</td>
-                                <td>1234567890</td>
-                            </tr>
-                            <tr>
-                                <td>Account Name:</td>
-                                <td>BoardPay System</td>
-                            </tr>
-                            <tr>
-                                <td>Reference:</td>
-                                <td>BILL-@Model.BillId</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    
-                    <p class="mb-0"><strong>Note:</strong> After making payment, you must submit your payment details through the system for verification.</p>
-                </div>
-            </div>
-            
-            @if (Model.Status == BoardPaySystem.Models.BillStatus.NotPaid || Model.Status == BoardPaySystem.Models.BillStatus.Overdue)
-            {
-                <div class="d-grid">
-                    <a asp-action="Payment" asp-route-id="@Model.BillId" class="btn btn-lg btn-success">
-                        <i class="fas fa-money-bill-wave me-2"></i> Submit Payment
-                    </a>
-                </div>
-            }
-            else if (Model.Status == BoardPaySystem.Models.BillStatus.Pending)
-            {
-                <div class="alert alert-info">
-                    <h5><i class="fas fa-hourglass-half"></i> Payment Pending</h5>
-                    <p>Your payment has been submitted and is pending verification by the landlord. You will be notified once your payment is confirmed.</p>
-                </div>
-            }
-        </div>
     </div>
-</div>

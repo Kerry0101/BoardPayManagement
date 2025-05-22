@@ -6,7 +6,7 @@ namespace BoardPaySystem.Models
     {
         [Required(ErrorMessage = "Phone number is required")]
         [Display(Name = "Phone Number")]
-        [RegularExpression(@"^\+?[1-9]\d{1,14}$", ErrorMessage = "Please enter a valid phone number with country code (e.g., +1234567890)")]
+        [RegularExpression(@"^(\+\d{10,15}|09\d{9})$", ErrorMessage = "Please enter a valid phone number (e.g., +639123456789 or 09123456789)")]
         public string PhoneNumber { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Message is required")]

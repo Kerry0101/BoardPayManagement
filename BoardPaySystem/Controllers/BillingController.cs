@@ -384,9 +384,9 @@ namespace BoardPaySystem.Controllers
                 TenantId = bill.TenantId,
                 Amount = amount,
                 PaymentDate = DateTime.Now,
-                PaymentMethod = "GCash",
+                PaymentMethod = "Cash",
                 ReferenceNumber = bill.PaymentReference ?? "Approved by landlord",
-                Notes = $"GCash payment approved by landlord on {DateTime.Now}"
+                Notes = $"Cash payment approved by landlord on {DateTime.Now}"
             };
 
             _context.Payments.Add(payment);
@@ -399,33 +399,9 @@ namespace BoardPaySystem.Controllers
             if (bill.Tenant != null)
             {
                 tenantName = $"{bill.Tenant.FirstName} {bill.Tenant.LastName}";
-
-                // Send SMS notification for payment approval
-                if (!string.IsNullOrEmpty(bill.Tenant.PhoneNumber) &&
-                    bill.Tenant.SmsNotificationsEnabled &&
-                    bill.Tenant.SmsPaymentConfirmationEnabled)
-                {
-                    try
-                    {
-                        var message = SmsMessageTemplates.PaymentConfirmed(bill, bill.Tenant.FirstName, amount);
-
-                        bool smsSent = await _smsService.SendSmsAsync(bill.Tenant.PhoneNumber, message);
-
-                        if (smsSent)
-                        {
-                            _logger.LogInformation("Payment approval SMS sent to {TenantName} at {PhoneNumber}",
-                                tenantName, bill.Tenant.PhoneNumber);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Failed to send payment approval SMS to tenant {TenantId}", bill.TenantId);
-                        // Don't rethrow - continue with payment process
-                    }
-                }
             }
 
-            TempData["SuccessMessage"] = $"GCash payment for {tenantName} has been approved.";
+            TempData["SuccessMessage"] = $"Cash payment for {tenantName} has been approved.";
             return RedirectToAction("BillDetails", new { id = billId });
         }
 

@@ -265,5 +265,33 @@ namespace BoardPaySystem.Controllers
 
             return View(readings);
         }
+
+        // AJAX: Get Floors by Building
+        [HttpGet]
+        public async Task<IActionResult> GetFloors(int buildingId)
+        {
+            var floors = await _context.Floors
+                .Where(f => f.BuildingId == buildingId)
+                .Select(f => new { f.FloorId, f.FloorName })
+                .ToListAsync();
+            return Json(floors);
+        }
+
+        // AJAX: Get Tenants by Floor
+        [HttpGet]
+        public async Task<IActionResult> GetTenants(int floorId)
+        {
+            var tenants = await _context.Rooms
+                .Where(r => r.FloorId == floorId && r.TenantId != null)
+                .Join(_context.Users,
+                    room => room.TenantId,
+                    user => user.Id,
+                    (room, user) => new {
+                        TenantId = user.Id,
+                        TenantName = user.FirstName + " " + user.LastName
+                    })
+                .ToListAsync();
+            return Json(tenants);
+        }
     }
 }

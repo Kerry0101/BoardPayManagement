@@ -68,14 +68,7 @@
                     </td>
                     <td class="action-cell">
                         <div class="action-btn">
-                        @if (!isPaid)
-                        {
-                            <a asp-action="Payment" asp-controller="Tenant" asp-route-id="@bill.BillId" class="btn-primary btn-small">Pay Now</a>
-                        }
-                        else
-                        {
-                            <a asp-action="BillDetails" asp-controller="Tenant" asp-route-id="@bill.BillId" class="btn-secondary btn-small">View Details</a>
-                        }
+                            <a asp-action="BillDetails" asp-controller="Tenant" asp-route-id="@bill.BillId" class="btn-secondary btn-small">Bill Details</a>
                         </div>
                     </td>
                 </tr>

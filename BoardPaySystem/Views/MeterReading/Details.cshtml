@@ -78,11 +78,11 @@
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4 fw-bold">Rate per kWh:</div>
-                        <div class="col-md-8">@Model.RatePerKwh.ToString("C")</div>
+                        <div class="col-md-8">@Model.RatePerKwh.ToString("C", new System.Globalization.CultureInfo("en-PH"))</div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4 fw-bold">Total Charge:</div>
-                        <div class="col-md-8 fw-bold fs-5">@Model.TotalCharge.ToString("C")</div>
+                        <div class="col-md-8 fw-bold fs-5">@Model.TotalCharge.ToString("C", new System.Globalization.CultureInfo("en-PH"))</div>
                     </div>
                     @if (!string.IsNullOrEmpty(Model.Notes))
                     {

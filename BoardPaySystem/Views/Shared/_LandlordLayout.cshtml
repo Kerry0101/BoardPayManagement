@@ -26,7 +26,7 @@
                     <li><a asp-action="MeterReadings" asp-controller="Landlord" class="nav-link @(currentAction == "MeterReadings" ? "active" : "")"><i class="fas fa-bolt"></i> Meter Readings</a></li>
                     <li><a asp-action="Billing" asp-controller="Landlord" class="nav-link @(isBillingActive ? "active" : "")"><i class="fas fa-file-invoice-dollar"></i> Billing & Payments</a></li>
                     <li><a href="/Landlord/MonthlyIncomeSummary?year=@DateTime.Now.Year" class="nav-link @(currentAction == "Reports" || currentAction == "MonthlyIncomeSummary" || currentAction == "PaymentHistory" ? "active" : "")"><i class="fas fa-chart-line"></i> Reports</a></li>
-                    <li><a asp-action="Test" asp-controller="Sms" class="nav-link @(currentController == "Sms" && currentAction == "Test" ? "active" : "")"><i class="fas fa-sms"></i> SMS Notifications</a></li>
+                    <!-- <li><a asp-action="Test" asp-controller="Sms" class="nav-link @(currentController == "Sms" && currentAction == "Test" ? "active" : "")"><i class="fas fa-sms"></i> SMS Notifications</a></li> -->
                     <li><a asp-action="LandlordProfile" asp-controller="Landlord" class="nav-link @(currentAction == "Profile" ? "active" : "")"><i class="fas fa-user-circle"></i> My Profile</a></li>
                 </ul>
             </nav>

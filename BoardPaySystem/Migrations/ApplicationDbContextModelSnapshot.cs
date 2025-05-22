@@ -49,6 +49,9 @@ namespace BoardPaySystem.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsArchived")
                         .HasColumnType("bit");
 

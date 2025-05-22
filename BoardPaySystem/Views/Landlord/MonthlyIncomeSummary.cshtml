@@ -45,7 +45,7 @@
             <div class="card text-white bg-primary text-center shadow-sm">
                 <div class="card-body p-2">
                     <div class="small">Total Billed</div>
-                    <div class="fw-bold fs-5">@Model.TotalBilled.ToString("C")</div>
+                    <div class="fw-bold fs-5">@Model.TotalBilled.ToString("C", new System.Globalization.CultureInfo("en-PH"))</div>
                 </div>
             </div>
         </div>
@@ -53,7 +53,7 @@
             <div class="card text-white bg-success text-center shadow-sm">
                 <div class="card-body p-2">
                     <div class="small">Total Collected</div>
-                    <div class="fw-bold fs-5">@Model.TotalCollected.ToString("C")</div>
+                    <div class="fw-bold fs-5">@Model.TotalCollected.ToString("C", new System.Globalization.CultureInfo("en-PH"))</div>
                 </div>
             </div>
         </div> -->
@@ -61,7 +61,7 @@
             <div class="card text-dark bg-warning text-center shadow-sm">
                 <div class="card-body p-2">
                     <div class="small">Outstanding</div>
-                    <div class="fw-bold fs-5">@Model.TotalOutstanding.ToString("C")</div>
+                    <div class="fw-bold fs-5">@Model.TotalOutstanding.ToString("C", new System.Globalization.CultureInfo("en-PH"))</div>
                 </div>
             </div>
         </div>
@@ -69,7 +69,7 @@
             <div class="card text-white bg-danger text-center shadow-sm">
                 <div class="card-body p-2">
                     <div class="small">Overdue</div>
-                    <div class="fw-bold fs-5">@Model.TotalOverdue.ToString("C")</div>
+                    <div class="fw-bold fs-5">@Model.TotalOverdue.ToString("C", new System.Globalization.CultureInfo("en-PH"))</div>
                 </div>
             </div>
         </div>
@@ -77,7 +77,7 @@
             <div class="card text-white bg-secondary text-center shadow-sm">
                 <div class="card-body p-2">
                     <div class="small">Written Off</div>
-                    <div class="fw-bold fs-5">@Model.TotalWrittenOff.ToString("C")</div>
+                    <div class="fw-bold fs-5">@Model.TotalWrittenOff.ToString("C", new System.Globalization.CultureInfo("en-PH"))</div>
                 </div>
             </div>
         </div>
@@ -85,7 +85,7 @@
             <div class="card text-white bg-info text-center shadow-sm">
                 <div class="card-body p-2">
                     <div class="small">Total Income</div>
-                    <div class="fw-bold fs-5">@Model.TotalIncome.ToString("C")</div>
+                    <div class="fw-bold fs-5">@Model.TotalIncome.ToString("C", new System.Globalization.CultureInfo("en-PH"))</div>
                 </div>
             </div>
         </div>
@@ -109,11 +109,11 @@
                         {
                             <tr>
                                 <td>@months[row.Month - 1] @row.Year</td>
-                                <td>@row.Billed.ToString("C")</td>
-                                <td>@row.Collected.ToString("C")</td>
-                                <td>@row.Outstanding.ToString("C")</td>
-                                <td>@row.Overdue.ToString("C")</td>
-                                <td>@row.WrittenOff.ToString("C")</td>
+                                <td>@row.Billed.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                <td>@row.Collected.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                <td>@row.Outstanding.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                <td>@row.Overdue.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                <td>@row.WrittenOff.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                             </tr>
                         }
                     </tbody>

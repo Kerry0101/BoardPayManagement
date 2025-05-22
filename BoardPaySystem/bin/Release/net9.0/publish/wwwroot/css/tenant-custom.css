@@ -1,7 +1,15 @@
 /* --- Global Styles & Reset --- */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f7f6; }
-.app-container { width: 100%; max-width: 1200px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); overflow: hidden; margin: 0 auto; }
+.app-container {
+    width: 100%;
+    max-width: 1200px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin: 0 auto;
+}
 
 /* --- Dashboard Layout --- */
 .dashboard { display: flex; min-height: 600px; }
@@ -14,10 +22,16 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helve
 .sidebar .logout-button { margin-top: auto; padding: 15px 20px; text-align: center; }
 .logout-button button { background-color: #e74c3c; width: 90%; }
 .logout-button button:hover { background-color: #c0392b; }
-.main-content { flex-grow: 1; padding: 25px 30px; background-color: #ffffff; overflow-y: auto; }
+.main-content {
+    flex-grow: 1;
+    padding: 25px 30px;
+    background-color: #ffffff;
+    overflow-y: auto;
+    width: 100%;
+}
 
 /* --- Content Sections --- */
-.content-section { display: none; animation: fadeIn 0.4s ease-in-out; }
+.content-section { display: none; animation: fadeIn 0.4s ease-in-out; width: 100%; box-sizing: border-box; padding: 24px 0; }
 .content-section.active { display: block; }
 .content-section h3 { color: #3498db; font-size: 1.6em; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
 .content-section h3 .actions { font-size: 0.6em; }
@@ -39,7 +53,16 @@ td .status-overdue { background-color: #fce8e6; color: #c53929; }
 .mt-30 { margin-top: 30px; }
 
 /* --- Cards --- */
-.info-card { background-color: #f8f9fa; border: 1px solid #e9ecef; border-left: 5px solid #3498db; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+.info-card {
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 0;
+    margin: 0 0 20px 0;
+    padding: 20px 24px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-left: 5px solid #3498db;
+}
 .info-card h4 { margin-bottom: 10px; color: #3498db; }
 .info-card p { margin-bottom: 5px; color: #555; }
 .info-card strong { color: #333; }
@@ -69,18 +92,9 @@ button:active, .btn-primary:active, .btn-secondary:active, .btn-danger:active, .
     padding: 32px 36px;
     margin: 18px auto;
     max-width: 1100px;
+    width: 100%;
     min-height: calc(100vh - 36px);
     height: auto;
-    transition: box-shadow 0.2s, border-radius 0.2s;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-}
-
-.main-content {
-    padding: 0 !important;
-    min-height: 100vh;
-    height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -99,29 +113,6 @@ button:active, .btn-primary:active, .btn-secondary:active, .btn-danger:active, .
 }
 .action-btn .btn-primary, .action-btn .btn-secondary {
     min-width: 90px;
-}
-
-/* --- GCash Reference Input Styling --- */
-.gcash-input-group {
-    margin-bottom: 18px;
-}
-.gcash-label {
-    font-weight: 600;
-    font-size: 1.08em;
-    margin-bottom: 6px;
-}
-.gcash-input {
-    font-size: 1.1em;
-    padding: 14px;
-    margin-bottom: 10px;
-    border-radius: 6px;
-    border: 1px solid #bfc9d1;
-    box-shadow: 0 1px 2px rgba(44,62,80,0.04);
-    transition: border-color 0.2s;
-}
-.gcash-input:focus {
-    border-color: #3498db;
-    outline: none;
 }
 
 /* --- Responsive Improvements for Tenant Layout --- */
@@ -207,4 +198,14 @@ button:active, .btn-primary:active, .btn-secondary:active, .btn-danger:active, .
         padding: 7px 6px;
         font-size: 0.98em;
     }
+}
+
+.tenant-main-card .info-card {
+    background: none !important;
+    border: none !important;
+    border-left: 4px solid #3498db !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding-left: 18px;
+    margin-bottom: 24px;
 } 

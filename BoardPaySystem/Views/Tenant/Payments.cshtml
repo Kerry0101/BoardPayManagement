@@ -40,7 +40,7 @@
                                             <td>@bill.BillId</td>
                                             <td>@bill.BillingDate.ToString("MMM yyyy")</td>
                                             <td>@(bill.PaymentDate.HasValue ? bill.PaymentDate.Value.ToString("MMM dd, yyyy") : "-")</td>
-                                            <td>@bill.TotalAmount.ToString("C")</td>
+                                            <td>@bill.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                             <td>@bill.PaymentReference</td>
                                             <td>
                                                 <a asp-action="BillDetails" asp-route-id="@bill.BillId" class="btn btn-sm btn-info">

@@ -140,26 +140,21 @@
                 const buildingId = this.value;
                 const floorSelect = $('#floorSelect');
                 const roomSelect = $('#roomSelect');
-                console.log('Building selected:', buildingId);
                 // Reset and disable floor and room selects
                 floorSelect.html('<option value="">Select a floor</option>');
-                roomSelect.html('<option value="">Select a room</option>');
                 floorSelect.prop('disabled', !buildingId);
+                roomSelect.html('<option value="">Select a room</option>');
                 roomSelect.prop('disabled', true);
 
                 if (buildingId) {
                     try {
-                        const url = '@Url.Action("GetFloors", "Landlord")?id=' + buildingId;
-                        console.log('Fetching floors from:', url);
+                        const url = '/Landlord/GetFloors?buildingId=' + buildingId;
                         const response = await fetch(url);
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                         const result = await response.json();
-                        console.log('Floors loaded:', result);
-                        if (result.success && Array.isArray(result.data) && result.data.length > 0) {
-                            result.data.forEach(floor => {
-                                floorSelect.append(`<option value="${floor.floorId}">${floor.displayName}</option>`);
+                        if (Array.isArray(result) && result.length > 0) {
+                            result.forEach(floor => {
+                                floorSelect.append(`<option value="${floor.floorId}">${floor.displayName || floor.floorName}</option>`);
                             });
                             floorSelect.prop('disabled', false);
                         } else {
@@ -167,7 +162,6 @@
                         }
                     } catch (error) {
                         console.error('Error loading floors:', error);
-                        alert('Error loading floors. Please try again.');
                         floorSelect.html('<option value="">Error loading floors</option>');
                     }
                 }

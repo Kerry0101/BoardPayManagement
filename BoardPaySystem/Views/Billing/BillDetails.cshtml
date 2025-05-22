@@ -93,15 +93,15 @@
                                 <table class="table table-sm table-borderless mb-0">
                                     <tr>
                                         <td>Original Bill Amount:</td>
-                                        <td class="text-end">@Model.TotalAmount.ToString("C")</td>
+                                        <td class="text-end">@Model.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                     </tr>
                                     <tr>
-                                        <td>Late Fee (@ViewBag.LateFeePercentage% of @Model.TotalAmount.ToString("C")):</td>
-                                        <td class="text-end">+ @(((decimal)ViewBag.TotalLateFee).ToString("C"))</td>
+                                        <td>Late Fee (@ViewBag.LateFeePercentage% of @Model.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))):</td>
+                                        <td class="text-end">+ @(((decimal)ViewBag.TotalLateFee).ToString("C", new System.Globalization.CultureInfo("en-PH")))</td>
                                     </tr>
                                     <tr class="fw-bold">
                                         <td>New Total Amount Due:</td>
-                                        <td class="text-end">@(((decimal)ViewBag.AdjustedTotal).ToString("C"))</td>
+                                        <td class="text-end">@(((decimal)ViewBag.AdjustedTotal).ToString("C", new System.Globalization.CultureInfo("en-PH")))</td>
                                     </tr>
                                 </table>
                             </div>
@@ -142,18 +142,18 @@
                                 <strong>Total Amount:</strong> 
                                 @if (isOverdue && ViewBag.AdjustedTotal != null)
                                 {
-                                    <span class="text-decoration-line-through text-muted me-2">@(Model.TotalAmount.ToString("C"))</span>
-                                    <span class="text-danger fw-bold">@(((decimal)ViewBag.AdjustedTotal).ToString("C"))</span>
+                                    <span class="text-decoration-line-through text-muted me-2">@(Model.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH")))</span>
+                                    <span class="text-danger fw-bold">@(((decimal)ViewBag.AdjustedTotal).ToString("C", new System.Globalization.CultureInfo("en-PH")))</span>
                                 }
                                 else
                                 {
-                                    <span>@(Model.TotalAmount.ToString("C"))</span>
+                                    <span>@(Model.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH")))</span>
                                 }
                             </p>
-                            <p><strong>Amount Paid:</strong> @(totalPaid.ToString("C"))</p>
+                            <p><strong>Amount Paid:</strong> @(totalPaid.ToString("C", new System.Globalization.CultureInfo("en-PH")))</p>
                             <p>
                                 <strong>Remaining Balance:</strong> 
-                                <span class="@(isOverdue ? "text-danger fw-bold" : "")">@(remainingBalance.ToString("C"))</span>
+                                <span class="@(isOverdue ? "text-danger fw-bold" : "")">@(remainingBalance.ToString("C", new System.Globalization.CultureInfo("en-PH")))</span>
                             </p>
                         </div>
                     </div>
@@ -167,12 +167,12 @@
                                     <td class="text-end">
                                         @if (isOverdue && ViewBag.AdjustedRent != null)
                                         {
-                                            <span class="text-decoration-line-through text-muted me-2">@Model.MonthlyRent.ToString("C")</span>
-                                            <span class="text-danger">@(((decimal)ViewBag.AdjustedRent).ToString("C"))</span>
+                                            <span class="text-decoration-line-through text-muted me-2">@Model.MonthlyRent.ToString("C", new System.Globalization.CultureInfo("en-PH"))</span>
+                                            <span class="text-danger">@(((decimal)ViewBag.AdjustedRent).ToString("C", new System.Globalization.CultureInfo("en-PH")))</span>
                                         }
                                         else
                                         {
-                                            @Model.MonthlyRent.ToString("C")
+                                            @Model.MonthlyRent.ToString("C", new System.Globalization.CultureInfo("en-PH"))
                                         }
                                     </td>
                                 </tr>
@@ -181,12 +181,12 @@
                                     <td class="text-end">
                                         @if (isOverdue && ViewBag.AdjustedWaterFee != null)
                                         {
-                                            <span class="text-decoration-line-through text-muted me-2">@Model.WaterFee.ToString("C")</span>
-                                            <span class="text-danger">@(((decimal)ViewBag.AdjustedWaterFee).ToString("C"))</span>
+                                            <span class="text-decoration-line-through text-muted me-2">@Model.WaterFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</span>
+                                            <span class="text-danger">@(((decimal)ViewBag.AdjustedWaterFee).ToString("C", new System.Globalization.CultureInfo("en-PH")))</span>
                                         }
                                         else
                                         {
-                                            @Model.WaterFee.ToString("C")
+                                            @Model.WaterFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))
                                         }
                                     </td>
                                 </tr>
@@ -195,12 +195,12 @@
                                     <td class="text-end">
                                         @if (isOverdue && ViewBag.AdjustedElectricityFee != null)
                                         {
-                                            <span class="text-decoration-line-through text-muted me-2">@Model.ElectricityFee.ToString("C")</span>
-                                            <span class="text-danger">@(((decimal)ViewBag.AdjustedElectricityFee).ToString("C"))</span>
+                                            <span class="text-decoration-line-through text-muted me-2">@Model.ElectricityFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</span>
+                                            <span class="text-danger">@(((decimal)ViewBag.AdjustedElectricityFee).ToString("C", new System.Globalization.CultureInfo("en-PH")))</span>
                                         }
                                         else
                                         {
-                                            @Model.ElectricityFee.ToString("C")
+                                            @Model.ElectricityFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))
                                         }
                                         @if (Model.ElectricityFee == 0)
                                         {
@@ -215,12 +215,12 @@
                                     <td class="text-end">
                                         @if (isOverdue && ViewBag.AdjustedWifiFee != null)
                                         {
-                                            <span class="text-decoration-line-through text-muted me-2">@Model.WifiFee.ToString("C")</span>
-                                            <span class="text-danger">@(((decimal)ViewBag.AdjustedWifiFee).ToString("C"))</span>
+                                            <span class="text-decoration-line-through text-muted me-2">@Model.WifiFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</span>
+                                            <span class="text-danger">@(((decimal)ViewBag.AdjustedWifiFee).ToString("C", new System.Globalization.CultureInfo("en-PH")))</span>
                                         }
                                         else
                                         {
-                                            @Model.WifiFee.ToString("C")
+                                            @Model.WifiFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))
                                         }
                                     </td>
                                 </tr>
@@ -231,21 +231,21 @@
                                             <strong>Late Fee (@ViewBag.LateFeePercentage%)</strong>
                                             <small class="d-block text-muted">Applied to all charges</small>
                                         </td>
-                                        <td class="text-end text-danger fw-bold">@(((decimal)ViewBag.TotalLateFee).ToString("C"))</td>
+                                        <td class="text-end text-danger fw-bold">@(((decimal)ViewBag.TotalLateFee).ToString("C", new System.Globalization.CultureInfo("en-PH")))</td>
                                     </tr>
                                 }
                                 else if (Model.LateFee.HasValue && Model.LateFee.Value > 0)
                                 {
                                     <tr>
                                         <td>Late Fee</td>
-                                        <td class="text-end">@Model.LateFee.Value.ToString("C")</td>
+                                        <td class="text-end">@Model.LateFee.Value.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                     </tr>
                                 }
                                 @if (Model.OtherFees.HasValue && Model.OtherFees.Value > 0)
                                 {
                                     <tr>
                                         <td>Other Fees @(!string.IsNullOrEmpty(Model.OtherFeesDescription) ? $"({Model.OtherFeesDescription})" : "")</td>
-                                        <td class="text-end">@Model.OtherFees.Value.ToString("C")</td>
+                                        <td class="text-end">@Model.OtherFees.Value.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                     </tr>
                                 }
                                 <tr class="fw-bold @(isOverdue ? "table-danger" : "")">
@@ -253,12 +253,12 @@
                                     <td class="text-end @(isOverdue ? "text-danger" : "")">
                                         @if (isOverdue && ViewBag.AdjustedTotal != null)
                                         {
-                                            <span class="text-decoration-line-through text-muted me-2">@Model.TotalAmount.ToString("C")</span>
-                                            <span>@(((decimal)ViewBag.AdjustedTotal).ToString("C"))</span>
+                                            <span class="text-decoration-line-through text-muted me-2">@Model.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))</span>
+                                            <span>@(((decimal)ViewBag.AdjustedTotal).ToString("C", new System.Globalization.CultureInfo("en-PH")))</span>
                                         }
                                         else
                                         {
-                                            @Model.TotalAmount.ToString("C")
+                                            @Model.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))
                                         }
                                     </td>
                                 </tr>
@@ -291,7 +291,7 @@
                                     {
                                         <tr>
                                             <td>@payment.PaymentDate.ToString("MM/dd/yyyy")</td>
-                                            <td>@payment.Amount.ToString("C")</td>
+                                            <td>@payment.Amount.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                             <td>@payment.ReferenceNumber</td>
                                         </tr>
                                     }
@@ -299,7 +299,7 @@
                                 <tfoot>
                                     <tr class="fw-bold">
                                         <td>Total</td>
-                                        <td colspan="2">@totalPaid.ToString("C")</td>
+                                        <td colspan="2">@totalPaid.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -351,35 +351,35 @@
                                 <tbody>
                                     <tr>
                                         <td>Rent</td>
-                                        <td class="text-end">@Model.MonthlyRent.ToString("C")</td>
-                                        <td class="text-end">@((((decimal)ViewBag.AdjustedRent - Model.MonthlyRent)).ToString("C"))</td>
-                                        <td class="text-end text-danger">@(((decimal)ViewBag.AdjustedRent).ToString("C"))</td>
+                                        <td class="text-end">@Model.MonthlyRent.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        <td class="text-end">@((((decimal)ViewBag.AdjustedRent - Model.MonthlyRent)).ToString("C", new System.Globalization.CultureInfo("en-PH"))))</td>
+                                        <td class="text-end text-danger">@(((decimal)ViewBag.AdjustedRent).ToString("C", new System.Globalization.CultureInfo("en-PH")))</td>
                                     </tr>
                                     <tr>
                                         <td>Water</td>
-                                        <td class="text-end">@Model.WaterFee.ToString("C")</td>
-                                        <td class="text-end">@((((decimal)ViewBag.AdjustedWaterFee - Model.WaterFee)).ToString("C"))</td>
-                                        <td class="text-end text-danger">@(((decimal)ViewBag.AdjustedWaterFee).ToString("C"))</td>
+                                        <td class="text-end">@Model.WaterFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        <td class="text-end">@((((decimal)ViewBag.AdjustedWaterFee - Model.WaterFee)).ToString("C", new System.Globalization.CultureInfo("en-PH"))))</td>
+                                        <td class="text-end text-danger">@(((decimal)ViewBag.AdjustedWaterFee).ToString("C", new System.Globalization.CultureInfo("en-PH")))</td>
                                     </tr>
                                     <tr>
                                         <td>Electricity</td>
-                                        <td class="text-end">@Model.ElectricityFee.ToString("C")</td>
-                                        <td class="text-end">@((((decimal)ViewBag.AdjustedElectricityFee - Model.ElectricityFee)).ToString("C"))</td>
-                                        <td class="text-end text-danger">@(((decimal)ViewBag.AdjustedElectricityFee).ToString("C"))</td>
+                                        <td class="text-end">@Model.ElectricityFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        <td class="text-end">@((((decimal)ViewBag.AdjustedElectricityFee - Model.ElectricityFee)).ToString("C", new System.Globalization.CultureInfo("en-PH"))))</td>
+                                        <td class="text-end text-danger">@(((decimal)ViewBag.AdjustedElectricityFee).ToString("C", new System.Globalization.CultureInfo("en-PH")))</td>
                                     </tr>
                                     <tr>
                                         <td>WiFi</td>
-                                        <td class="text-end">@Model.WifiFee.ToString("C")</td>
-                                        <td class="text-end">@((((decimal)ViewBag.AdjustedWifiFee - Model.WifiFee)).ToString("C"))</td>
-                                        <td class="text-end text-danger">@(((decimal)ViewBag.AdjustedWifiFee).ToString("C"))</td>
+                                        <td class="text-end">@Model.WifiFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        <td class="text-end">@((((decimal)ViewBag.AdjustedWifiFee - Model.WifiFee)).ToString("C", new System.Globalization.CultureInfo("en-PH"))))</td>
+                                        <td class="text-end text-danger">@(((decimal)ViewBag.AdjustedWifiFee).ToString("C", new System.Globalization.CultureInfo("en-PH")))</td>
                                     </tr>
                                 </tbody>
                                 <tfoot class="table-danger">
                                     <tr class="fw-bold">
                                         <td>Total</td>
-                                        <td class="text-end">@Model.TotalAmount.ToString("C")</td>
-                                        <td class="text-end">@(((decimal)ViewBag.TotalLateFee).ToString("C"))</td>
-                                        <td class="text-end text-danger">@(((decimal)ViewBag.AdjustedTotal).ToString("C"))</td>
+                                        <td class="text-end">@Model.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
+                                        <td class="text-end">@(((decimal)ViewBag.TotalLateFee).ToString("C", new System.Globalization.CultureInfo("en-PH")))</td>
+                                        <td class="text-end text-danger">@(((decimal)ViewBag.AdjustedTotal).ToString("C", new System.Globalization.CultureInfo("en-PH")))</td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -387,7 +387,7 @@
                         
                         <div class="alert alert-warning mt-3 mb-0">
                             <i class="fas fa-info-circle me-2"></i>
-                            Please inform the tenant that the total amount due has increased to <strong>@(((decimal)ViewBag.AdjustedTotal).ToString("C"))</strong> due to late payment.
+                            Please inform the tenant that the total amount due has increased to <strong>@(((decimal)ViewBag.AdjustedTotal).ToString("C", new System.Globalization.CultureInfo("en-PH")))</strong> due to late payment.
                         </div>
                     </div>
                 </div>

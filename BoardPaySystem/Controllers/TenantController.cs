@@ -53,6 +53,55 @@ namespace BoardPaySystem.Controllers
             return View(bills);
         }
 
+        // GET: Tenant/BillDetails/{id}
+        public async Task<IActionResult> BillDetails(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var bill = await _context.Bills
+                .Include(b => b.Room)
+                    .ThenInclude(r => r.Floor)
+                        .ThenInclude(f => f.Building)
+                .FirstOrDefaultAsync(b => b.BillId == id && b.TenantId == userId && b.IsApproved);
+            if (bill == null)
+            {
+                return NotFound();
+            }
+
+            // Overdue/late fee logic (copied from landlord controller)
+            bool isPastDueDate = bill.DueDate < DateTime.Now.Date;
+            bool isUnpaid = bill.Status == BillStatus.NotPaid || bill.Status == BillStatus.Pending;
+            ViewBag.IsPastDueDate = isPastDueDate && isUnpaid;
+
+            if ((bill.Status == BillStatus.Overdue || (isPastDueDate && isUnpaid)) && bill.Room?.Floor?.Building != null)
+            {
+                decimal lateFeePercentage = bill.Room.Floor.Building.LateFee;
+                decimal adjustedRent = bill.MonthlyRent * (1 + lateFeePercentage / 100);
+                decimal adjustedWaterFee = bill.WaterFee * (1 + lateFeePercentage / 100);
+                decimal adjustedElectricityFee = bill.ElectricityFee * (1 + lateFeePercentage / 100);
+                decimal adjustedWifiFee = bill.WifiFee * (1 + lateFeePercentage / 100);
+                decimal totalLateFee = (adjustedRent - bill.MonthlyRent) +
+                                      (adjustedWaterFee - bill.WaterFee) +
+                                      (adjustedElectricityFee - bill.ElectricityFee) +
+                                      (adjustedWifiFee - bill.WifiFee);
+                TimeSpan daysLate = DateTime.Now.Date - bill.DueDate.Date;
+                ViewBag.IsOverdue = true;
+                ViewBag.DaysOverdue = daysLate.Days;
+                ViewBag.LateFeePercentage = lateFeePercentage;
+                ViewBag.AdjustedRent = adjustedRent;
+                ViewBag.AdjustedWaterFee = adjustedWaterFee;
+                ViewBag.AdjustedElectricityFee = adjustedElectricityFee;
+                ViewBag.AdjustedWifiFee = adjustedWifiFee;
+                ViewBag.TotalLateFee = totalLateFee;
+                ViewBag.AdjustedTotal = bill.TotalAmount + totalLateFee - (bill.LateFee ?? 0);
+            }
+            else
+            {
+                ViewBag.IsOverdue = false;
+            }
+
+            return View(bill);
+        }
+
         // GET: Tenant/Payments
         public async Task<IActionResult> Payments()
         {
@@ -123,23 +172,17 @@ namespace BoardPaySystem.Controllers
         public async Task<IActionResult> InitiatePayment(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
             var bill = await _context.Bills
                 .FirstOrDefaultAsync(b => b.BillId == id && b.TenantId == userId);
-
             if (bill == null)
             {
                 return NotFound();
             }
-
             // Mark the bill as pending payment
             bill.Status = BillStatus.Pending;
-            bill.PaymentReference = "GCash-" + DateTime.Now.ToString("yyyyMMdd-HHmmss");
-
+            bill.PaymentReference = "Cash-" + DateTime.Now.ToString("yyyyMMdd-HHmmss");
             await _context.SaveChangesAsync();
-
-            // Redirect to confirmation page or GCash payment page
-            // For now, just redirect back to the bill details
+            // Redirect to confirmation page or payment page
             return RedirectToAction(nameof(Payment), new { id = bill.BillId });
         }
 
@@ -317,6 +360,66 @@ namespace BoardPaySystem.Controllers
             }
 
             return RedirectToAction(nameof(SmsPreferences));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword, string confirmPassword)
+        {
+            if (string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword) || string.IsNullOrWhiteSpace(confirmPassword))
+            {
+                return Json(new { success = false, message = "All fields are required." });
+            }
+            if (newPassword != confirmPassword)
+            {
+                return Json(new { success = false, message = "New password and confirmation do not match." });
+            }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "User not found." });
+            }
+            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+            if (result.Succeeded)
+            {
+                return Json(new { success = true, message = "Password updated successfully." });
+            }
+            else
+            {
+                var errorMsg = result.Errors.FirstOrDefault()?.Description ?? "Failed to update password.";
+                return Json(new { success = false, message = errorMsg });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(string firstName, string lastName, string phoneNumber, string userName)
+        {
+            if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName) || string.IsNullOrWhiteSpace(phoneNumber) || string.IsNullOrWhiteSpace(userName))
+            {
+                return Json(new { success = false, message = "All fields are required." });
+            }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "User not found." });
+            }
+            user.FirstName = firstName;
+            user.LastName = lastName;
+            user.PhoneNumber = phoneNumber;
+            user.UserName = userName;
+            var result = await _userManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                return Json(new { success = true, message = "Profile updated successfully." });
+            }
+            else
+            {
+                var errorMsg = result.Errors.FirstOrDefault()?.Description ?? "Failed to update profile.";
+                return Json(new { success = false, message = errorMsg });
+            }
         }
     }
 }

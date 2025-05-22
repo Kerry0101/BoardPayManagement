@@ -146,10 +146,6 @@
                     <i class="fas fa-times"></i>
                     Cancel
                 </button>
-                <button type="button" class="btn-warning" id="forceDeleteBuildingBtn" style="display: none;">
-                    <i class="fas fa-hammer"></i>
-                    Force Delete
-                </button>
                 <button type="button" class="btn-danger" id="confirmDeleteBuildingBtn">
                     <i class="fas fa-trash"></i>
                     Delete Building
@@ -377,34 +373,14 @@
                         window.location.reload();
                     }, 1000);
                 } else {
-                    // Failed to delete, show Force Delete option
+                    // Failed to delete, show error message
                     confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Building';
                     confirmBtn.disabled = false;
                     
-                    const forceDeleteBtn = document.getElementById('forceDeleteBuildingBtn');
-                    forceDeleteBtn.style.display = 'inline-flex';
-                    
-                    forceDeleteBtn.onclick = function() {
-                        forceDeleteBuilding(buildingId);
-                    };
-                    
-                    // Remove any existing error messages
-                    document.querySelectorAll('.modal-body .alert-danger, .modal-body .alert-warning').forEach(el => {
-                        if (!el.classList.contains('initial-warning')) {
-                            el.remove();
-                        }
-                    });
-                    
-                    // Show error message
                     const errorMessage = document.createElement('div');
                     errorMessage.className = 'alert alert-danger mt-3';
                     errorMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${result.message}`;
                     document.querySelector('#deleteBuildingWarningModal .modal-body').appendChild(errorMessage);
-                    
-                    const noteMessage = document.createElement('div');
-                    noteMessage.className = 'alert alert-warning mt-2';
-                    noteMessage.innerHTML = `<i class="fas fa-info-circle"></i> <strong>Try Force Delete:</strong> This will bypass validation checks and forcibly remove the building and all related data.`;
-                    document.querySelector('#deleteBuildingWarningModal .modal-body').appendChild(noteMessage);
                 }
             })
             .catch(error => {
@@ -419,69 +395,6 @@
                 errorMessage.className = 'alert alert-danger mt-3';
                 errorMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> An error occurred while deleting the building. Please try again.`;
                 document.querySelector('#deleteBuildingWarningModal .modal-body').appendChild(errorMessage);
-                
-                const forceDeleteBtn = document.getElementById('forceDeleteBuildingBtn');
-                forceDeleteBtn.style.display = 'inline-flex';
-                
-                forceDeleteBtn.onclick = function() {
-                    forceDeleteBuilding(buildingId);
-                };
-            });
-        }
-        
-        function forceDeleteBuilding(buildingId) {
-            // Show loading indicator
-            const forceDeleteBtn = document.getElementById('forceDeleteBuildingBtn');
-            const originalText = forceDeleteBtn.innerHTML;
-            forceDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Forcing Delete...';
-            forceDeleteBtn.disabled = true;
-            
-            // Get anti-forgery token
-            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-            
-            // Send force delete request
-            fetch('@Url.Action("ForceDeleteBuilding", "Landlord")', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: `id=${encodeURIComponent(buildingId)}&__RequestVerificationToken=${encodeURIComponent(token)}`
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(result => {
-                if (result.success) {
-                    // Successful deletion
-                    forceCleanupModals();
-                    showSuccessAlert("Building forcefully deleted successfully!");
-                    
-                    // Reload the page after a short delay
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                } else {
-                    // Failed to force delete
-                    forceCleanupModals();
-                    showErrorAlert(result.message || 'Failed to force delete building.');
-                    
-                    // Re-enable button
-                    forceDeleteBtn.innerHTML = originalText;
-                    forceDeleteBtn.disabled = false;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                forceCleanupModals();
-                showErrorAlert('An unexpected error occurred during force deletion.');
-                
-                // Re-enable button
-                forceDeleteBtn.innerHTML = originalText;
-                forceDeleteBtn.disabled = false;
             });
         }
         

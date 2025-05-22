@@ -76,7 +76,7 @@ namespace BoardPaySystem.Controllers
                 return BadRequest(new { success = false, message = "Phone number and message body are required" });
             }
 
-            // No need to format phone number for Semaphore
+            // No need to format phone number for IPROG
             bool success = await _smsService.SendSmsAsync(toPhoneNumber, messageBody);
 
             if (success)
@@ -99,7 +99,7 @@ namespace BoardPaySystem.Controllers
             {
                 return View(model);
             }
-            // No need to format phone number for Semaphore
+            // No need to format phone number for IPROG
             bool success = await _smsService.SendSmsAsync(model.PhoneNumber, model.Message);
 
             if (success)

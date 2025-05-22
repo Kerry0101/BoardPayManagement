@@ -100,7 +100,7 @@
                                     <td>@p.PaymentDate.ToString("yyyy-MM-dd")</td>
                                     <td>@p.TenantName</td>
                                     <td>@p.RoomName</td>
-                                    <td>@p.Amount.ToString("C")</td>
+                                    <td>@p.Amount.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                     <td>@p.PaymentMethod</td>
                                     <td>@p.ReferenceNumber</td>
                                     <td>@p.BillPeriod</td>

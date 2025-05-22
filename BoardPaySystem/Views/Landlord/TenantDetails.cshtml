@@ -257,7 +257,8 @@ if (editForm) {
         formData.append('Password', document.getElementById('edit-password').value);
         formData.append('ConfirmPassword', document.getElementById('edit-confirm-password').value);
         formData.append('PhoneNumber', document.getElementById('edit-phone').value);
-        formData.append('StartDate', document.getElementById('edit-startdate').value);
+        const startDateInput = document.getElementById('edit-startdate');
+        formData.append('StartDate', startDateInput ? startDateInput.value : '');
         formData.append('__RequestVerificationToken', document.querySelector('#edit-tenant-form input[name="__RequestVerificationToken"]').value);
 
         fetch('@Url.Action("EditTenant", "Landlord")', {

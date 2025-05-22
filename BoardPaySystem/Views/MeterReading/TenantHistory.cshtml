@@ -35,13 +35,10 @@
                                 <td>@reading.CurrentReading</td>
                                 <td>@reading.UsageKwh</td>
                                 <td>@reading.RatePerKwh</td>
-                                <td>@reading.TotalCharge.ToString("C")</td>
+                                <td>@reading.TotalCharge.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                 <td>@reading.Notes</td>
                                 <td>
-                                    @if (reading.BillId == null)
-                                    {
-                                        <button class="btn btn-danger btn-sm delete-reading-btn" data-reading-id="@reading.ReadingId"><i class="fas fa-trash"></i> Delete</button>
-                                    }
+                                    <button class="btn btn-danger btn-sm delete-reading-btn" data-reading-id="@reading.ReadingId"><i class="fas fa-trash"></i> Delete</button>
                                 </td>
                             </tr>
                         }

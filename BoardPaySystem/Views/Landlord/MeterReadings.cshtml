@@ -23,44 +23,66 @@
     @Html.AntiForgeryToken()
     <div class="form-grid">
         <div class="form-group">
-            <label for="reading-tenant">Select Tenant</label>
-            <select id="reading-tenant" name="tenantId" required>
-                <option value="" disabled selected>-- Choose Tenant --</option>
-                @if (tenants != null)
+            <label for="buildingSelect">Building</label>
+            <select id="buildingSelect" class="form-control" required>
+                <option value="">-- Choose Building --</option>
+                @foreach (var building in ViewBag.Buildings)
                 {
-                    foreach (var tenant in tenants)
-                    {
-                        <option value="@tenant.Id" data-room="@tenant.CurrentRoom?.RoomId">@tenant.FirstName @tenant.LastName (@tenant.CurrentRoom?.Floor?.Building?.BuildingName - @tenant.CurrentRoom?.RoomNumber)</option>
-                    }
+                    <option value="@building.BuildingId">@building.BuildingName</option>
                 }
             </select>
+        </div>
+        <div class="form-group">
+            <label for="floorSelect">Floor</label>
+            <select id="floorSelect" class="form-control" disabled required>
+                <option value="">-- Choose Floor --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="roomSelect">Room</label>
+            <select id="roomSelect" class="form-control" name="roomId" disabled required>
+                <option value="">-- Choose Room --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="tenantName">Tenant</label>
+            <input type="text" id="tenantName" class="form-control" readonly />
+            <input type="hidden" id="tenantId" name="tenantId" />
         </div>
         <div class="form-group">
             <label for="reading-date">Reading Date</label>
             <input type="date" id="reading-date" name="readingDate" required />
         </div>
         <div class="form-group">
-            <label for="previous-reading">Previous Reading (kWh)</label>
-            <input type="number" id="previous-reading" readonly />
+            <label for="previous-reading">Previous Reading (kWh)
+                <span class="badge bg-secondary ms-1" style="font-size:0.8em;">Auto-generated</span>
+            </label>
+            <input type="number" id="previous-reading" class="form-control" readonly />
         </div>
         <div class="form-group">
-            <label for="current-reading">Current Reading (kWh)</label>
+            <label for="current-reading">Current Reading (kWh) <span class="text-danger">*</span></label>
             <input type="number" id="current-reading" name="currentReading" step="0.01" required />
-            <small class="form-text text-muted">
-                Enter the current meter reading in kilowatt-hours (kWh). If this is the first reading for this tenant/room, enter the value currently shown on the meter as the starting point.
+            <small class="form-text text-muted" id="firstReadingMsg" style="display:none;">
+                This is the first reading for this room. Enter the current meter value as the base reading.
             </small>
         </div>
         <div class="form-group">
-            <label for="usage">Usage (kWh)</label>
-            <input type="number" id="usage" readonly />
+            <label for="usage">Usage (kWh)
+                <span class="badge bg-secondary ms-1" style="font-size:0.8em;">Auto-generated</span>
+            </label>
+            <input type="number" id="usage" class="form-control" readonly />
         </div>
         <div class="form-group">
-            <label for="rate">Rate per kWh (₱)</label>
-            <input type="number" id="rate" name="ratePerKwh" step="0.01" required value="" readonly />
+            <label for="rate">Rate per kWh (₱)
+                <span class="badge bg-secondary ms-1" style="font-size:0.8em;">Auto-generated</span>
+            </label>
+            <input type="number" id="rate" name="ratePerKwh" step="0.01" readonly />
         </div>
         <div class="form-group">
-            <label for="charge">Charge (₱)</label>
-            <input type="number" id="charge" readonly />
+            <label for="charge">Charge (₱)
+                <span class="badge bg-secondary ms-1" style="font-size:0.8em;">Auto-generated</span>
+            </label>
+            <input type="number" id="charge" class="form-control" readonly />
         </div>
         <div class="form-group">
             <label for="notes">Notes</label>
@@ -71,109 +93,128 @@
     <p id="add-reading-message" class="message success"></p>
 </form>
 
-@* <h4 class="mt-4">Recent Readings</h4>
-<table class="table table-sm table-striped">
-    <thead>
-        <tr>
-            <th>Date</th>
-            <th>Tenant</th>
-            <th>Room</th>
-            <th>Previous</th>
-            <th>Current</th>
-            <th>Usage</th>
-            <th>Rate</th>
-            <th>Charge</th>
-            <th>Notes</th>
-        </tr>
-    </thead>
-    <tbody id="readings-table-body">
-        @foreach (var reading in readings.OrderByDescending(r => r.ReadingDate).Take(20))
-        {
-            <tr>
-                <td>@reading.ReadingDate.ToString("yyyy-MM-dd")</td>
-                <td>@reading.Tenant?.FirstName @reading.Tenant?.LastName</td>
-                <td>@reading.Room?.Floor?.Building?.BuildingName - @reading.Room?.RoomNumber</td>
-                <td>@reading.PreviousReading</td>
-                <td>@reading.CurrentReading</td>
-                <td>@reading.UsageKwh</td>
-                <td>@reading.RatePerKwh</td>
-                <td>@reading.TotalCharge.ToString("C")</td>
-                <td>@reading.Notes</td>
-            </tr>
-        }
-    </tbody>
-</table> *@
-
 @section Scripts {
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    let previousReadings = {};
-    let ratePerKwh = 12;
-    @foreach (var kvp in latestReadings)
-    {
-        if (kvp.Value != null)
-        {
-            <text>previousReadings['@kvp.Key'] = @kvp.Value.CurrentReading;</text>
+$(document).ready(function() {
+    // Building → Floor
+    $('#buildingSelect').change(function() {
+        var buildingId = $(this).val();
+        $('#floorSelect').prop('disabled', true).html('<option value="">-- Choose Floor --</option>');
+        $('#roomSelect').prop('disabled', true).html('<option value="">-- Choose Room --</option>');
+        $('#tenantName').val('');
+        $('#tenantId').val('');
+        if (buildingId) {
+            $.get('/Landlord/GetFloors', { buildingId: buildingId }, function(floors) {
+                if (Array.isArray(floors) && floors.length > 0) {
+                    floors.forEach(function(floor) {
+                        $('#floorSelect').append($('<option>', {
+                            value: floor.floorId,
+                            text: floor.displayName || floor.floorName
+                        }));
+                    });
+                    $('#floorSelect').prop('disabled', false);
+                } else {
+                    $('#floorSelect').html('<option value="">No floors available</option>');
+                }
+            });
         }
-    }
-    let tenantRates = {};
-    @if (ViewBag.TenantRates != null)
-    {
-        foreach (var kvp in (Dictionary<string, decimal>)ViewBag.TenantRates)
-        {
-            <text>tenantRates['@kvp.Key'] = @kvp.Value;</text>
-        }
-    }
-    document.getElementById('reading-tenant').addEventListener('change', function() {
-        var tenantId = this.value;
-        var prev = previousReadings[tenantId] || 0;
-        document.getElementById('previous-reading').value = prev;
-        document.getElementById('current-reading').value = '';
-        document.getElementById('usage').value = '';
-        document.getElementById('charge').value = '';
-        document.getElementById('rate').value = tenantRates[tenantId] || '';
     });
-    document.getElementById('current-reading').addEventListener('input', function() {
-        var prev = parseFloat(document.getElementById('previous-reading').value) || 0;
-        var curr = parseFloat(this.value) || 0;
-        // If this is the first reading (no previous), do not calculate usage/charge
-        if (prev === 0) {
-            document.getElementById('usage').value = '';
-            document.getElementById('charge').value = '';
-            document.getElementById('add-reading-message').textContent = 'This will be set as the starting reading. No charge will be calculated.';
-            document.getElementById('add-reading-message').classList.remove('text-danger');
-            return;
+    // Floor → Room
+    $('#floorSelect').change(function() {
+        var floorId = $(this).val();
+        $('#roomSelect').prop('disabled', true).html('<option value="">-- Choose Room --</option>');
+        $('#tenantName').val('');
+        $('#tenantId').val('');
+        if (floorId) {
+            $.get('/Room/GetOccupiedRooms', { floorId: floorId }, function(result) {
+                if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+                    result.data.forEach(function(room) {
+                        $('#roomSelect').append($('<option>', {
+                            value: room.roomId,
+                            text: room.displayName
+                        }));
+                    });
+                    $('#roomSelect').prop('disabled', false);
+                } else {
+                    $('#roomSelect').html('<option value="">No occupied rooms</option>');
+                }
+            });
         }
-        var usage = curr - prev;
-        if (usage < 0) {
-            document.getElementById('add-reading-message').textContent = 'Current reading cannot be less than previous.';
-            document.getElementById('add-reading-message').classList.add('text-danger');
-            document.getElementById('usage').value = '';
-            document.getElementById('charge').value = '';
-            return;
-        } else {
-            document.getElementById('add-reading-message').textContent = '';
-            document.getElementById('add-reading-message').classList.remove('text-danger');
-        }
-        document.getElementById('usage').value = usage;
-        var rate = parseFloat(document.getElementById('rate').value) || ratePerKwh;
-        document.getElementById('charge').value = usage * rate;
     });
-    document.getElementById('rate').addEventListener('input', function() {
-        var usage = parseFloat(document.getElementById('usage').value) || 0;
-        var rate = parseFloat(this.value) || ratePerKwh;
-        document.getElementById('charge').value = usage * rate;
+    // Room → Tenant and Room Info
+    $('#roomSelect').change(function() {
+        var roomId = $(this).val();
+        $('#tenantName').val('');
+        $('#tenantId').val('');
+        $('#previous-reading').val('');
+        $('#rate').val('');
+        if (roomId) {
+            // Get tenant info
+            $.get('/Landlord/GetTenantByRoom', { roomId: roomId }, function(tenant) {
+                if (tenant && tenant.tenantId && tenant.tenantName) {
+                    $('#tenantName').val(tenant.tenantName);
+                    $('#tenantId').val(tenant.tenantId);
+                } else {
+                    $('#tenantName').val('No tenant assigned');
+                }
+            });
+            // Get room info (rate and previous reading)
+            $.get('/Room/GetRoomInfo', { roomId: roomId }, function(info) {
+                if (info && info.success) {
+                    $('#rate').val(info.rate);
+                    $('#previous-reading').val(info.previousReading || 0);
+                    // Optionally, trigger change/input event to update UI
+                    $('#current-reading').trigger('input');
+                }
+            });
+        }
     });
     // Auto-select tenant if tenantId is in query string
     const urlParams = new URLSearchParams(window.location.search);
     const preselectTenantId = urlParams.get('tenantId');
     if (preselectTenantId) {
-        const tenantDropdown = document.getElementById('reading-tenant');
+        const tenantDropdown = document.getElementById('tenantSelect');
         if (tenantDropdown) {
             tenantDropdown.value = preselectTenantId;
             tenantDropdown.dispatchEvent(new Event('change'));
         }
     }
+    // Custom form validation: only require current reading if previous is blank or 0
+    $('#meter-reading-form').on('submit', function(e) {
+        var prev = parseFloat($('#previous-reading').val()) || 0;
+        var curr = $('#current-reading').val();
+        if (!curr) {
+            e.preventDefault();
+            alert('Current Reading is required.');
+            $('#current-reading').focus();
+            return false;
+        }
+        // If not first reading, optionally validate usage/charge if needed
+    });
+    // Calculate usage and charge when current reading changes
+    $('#current-reading').on('input', function() {
+        var prev = parseFloat($('#previous-reading').val()) || 0;
+        var curr = parseFloat($(this).val()) || 0;
+        var rate = parseFloat($('#rate').val()) || 0;
+        if (prev > 0) {
+            var usage = curr - prev;
+            if (usage < 0) {
+                $('#add-reading-message').text('Current reading cannot be less than previous.').addClass('text-danger');
+                $('#usage').val('');
+                $('#charge').val('');
+                return;
+            } else {
+                $('#add-reading-message').text('').removeClass('text-danger');
+            }
+            $('#usage').val(usage);
+            $('#charge').val(usage * rate);
+        } else {
+            // First reading, no usage/charge
+            $('#usage').val('');
+            $('#charge').val('');
+            $('#add-reading-message').text('This will be set as the starting reading. No charge will be calculated.').removeClass('text-danger');
+        }
+    });
 });
 </script>
 }
