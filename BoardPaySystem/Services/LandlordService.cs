@@ -49,9 +49,10 @@ namespace BoardPaySystem.Services
                 stats["PaidBills"] = monthlyBills.Count(b => b.Status == BillStatus.Paid);
                 stats["PendingBills"] = monthlyBills.Count(b => b.Status == BillStatus.Pending);
                 stats["OverdueBills"] = monthlyBills.Count(b => b.Status == BillStatus.Overdue);
-                stats["TotalBilledAmount"] = monthlyBills.Sum(b => b.TotalAmount).ToString("C");
-                stats["TotalPaidAmount"] = monthlyBills.Where(b => b.Status == BillStatus.Paid).Sum(b => b.TotalAmount).ToString("C");
-                stats["TotalPendingAmount"] = monthlyBills.Where(b => b.Status == BillStatus.Pending || b.Status == BillStatus.Overdue).Sum(b => b.TotalAmount).ToString("C");
+                stats["TotalBilledAmount"] = monthlyBills.Sum(b => b.TotalAmount).ToString("C", new System.Globalization.CultureInfo("en-PH"));
+                stats["TotalPaidAmount"] = monthlyBills.Where(b => b.Status == BillStatus.Paid).Sum(b => b.TotalAmount).ToString("C", new System.Globalization.CultureInfo("en-PH"));
+                stats["TotalPendingAmount"] = monthlyBills.Where(b => b.Status == BillStatus.Pending || b.Status == BillStatus.Overdue).Sum(b => b.TotalAmount).ToString("C", new System.Globalization.CultureInfo("en-PH"));
+                stats["TotalOverdueAmount"] = monthlyBills.Where(b => b.Status == BillStatus.Overdue).Sum(b => b.TotalAmount).ToString("C", new System.Globalization.CultureInfo("en-PH"));
             }
             catch (Exception ex)
             {

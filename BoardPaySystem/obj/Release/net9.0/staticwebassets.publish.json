@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "xzF61mg2//HOw2MO1ekeucbRa/ZuocVzY/cE46FH7rs=",
+  "Hash": "G7ScfA4XLybzaqmKaCZ6HmkS/R29uGik/Blxm45nlcI=",
   "Source": "BoardPaySystem",
   "BasePath": "_content/BoardPaySystem",
   "Mode": "Default",
@@ -6882,6 +6882,27 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\favicon.ico"
+    },
+    {
+      "Identity": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\wwwroot\\Images\\logo.jpg",
+      "SourceId": "BoardPaySystem",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\wwwroot\\",
+      "BasePath": "_content/BoardPaySystem",
+      "RelativePath": "Images/logo#[.{fingerprint}]?.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "xyp258ppso",
+      "Integrity": "+QQA5q7Hh3EDxFNglL1HyIPKRXE74Njb7COL9t2fE/8=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\Images\\logo.jpg"
     },
     {
       "Identity": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\wwwroot\\js\\site.js",
@@ -25999,6 +26020,88 @@
         {
           "Name": "integrity",
           "Value": "sha256-1HkjQSVuV0/ji/X/lGeDTHeagBS0BwopMrHDQuwqgtU="
+        }
+      ]
+    },
+    {
+      "Route": "Images/logo.jpg",
+      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\wwwroot\\Images\\logo.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53795"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"+QQA5q7Hh3EDxFNglL1HyIPKRXE74Njb7COL9t2fE/8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 23 May 2025 00:09:58 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-+QQA5q7Hh3EDxFNglL1HyIPKRXE74Njb7COL9t2fE/8="
+        }
+      ]
+    },
+    {
+      "Route": "Images/logo.xyp258ppso.jpg",
+      "AssetFile": "C:\\Users\\teche\\source\\repos\\BoardPay-System-IT15\\BoardPaySystem\\wwwroot\\Images\\logo.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53795"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"+QQA5q7Hh3EDxFNglL1HyIPKRXE74Njb7COL9t2fE/8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 23 May 2025 00:09:58 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "xyp258ppso"
+        },
+        {
+          "Name": "label",
+          "Value": "Images/logo.jpg"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-+QQA5q7Hh3EDxFNglL1HyIPKRXE74Njb7COL9t2fE/8="
         }
       ]
     },

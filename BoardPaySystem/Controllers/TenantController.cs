@@ -421,6 +421,12 @@ namespace BoardPaySystem.Controllers
                 return Json(new { success = false, message = errorMsg });
             }
         }
+
+        // GET: Tenant/PaymentPolicy
+        public IActionResult PaymentPolicy()
+        {
+            return View();
+        }
     }
 }
 

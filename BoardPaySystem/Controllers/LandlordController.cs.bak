@@ -92,15 +92,15 @@ namespace BoardPaySystem.Controllers
                 ViewBag.OverdueBills = monthlyBills.Count(b => b.Status == BillStatus.Overdue);
 
                 // Calculate total amounts
-                ViewBag.TotalBilledAmount = monthlyBills.Sum(b => b.TotalAmount).ToString("C");
+                ViewBag.TotalBilledAmount = monthlyBills.Sum(b => b.TotalAmount).ToString("C", new System.Globalization.CultureInfo("en-PH"));
                 ViewBag.TotalPaidAmount = monthlyBills
                     .Where(b => b.Status == BillStatus.Paid)
                     .Sum(b => b.TotalAmount)
-                    .ToString("C");
+                    .ToString("C", new System.Globalization.CultureInfo("en-PH"));
                 ViewBag.TotalPendingAmount = monthlyBills
                     .Where(b => b.Status == BillStatus.Pending || b.Status == BillStatus.Overdue)
                     .Sum(b => b.TotalAmount)
-                    .ToString("C");
+                    .ToString("C", new System.Globalization.CultureInfo("en-PH"));
 
                 return View();
             }

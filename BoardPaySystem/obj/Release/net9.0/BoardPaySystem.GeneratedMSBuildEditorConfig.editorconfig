@@ -232,6 +232,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVuYW50XFBheW1lbnQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/teche/source/repos/BoardPay-System-IT15/BoardPaySystem/Views/Tenant/PaymentPolicy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVuYW50XFBheW1lbnRQb2xpY3kuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/teche/source/repos/BoardPay-System-IT15/BoardPaySystem/Views/Tenant/Payments.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVuYW50XFBheW1lbnRzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 

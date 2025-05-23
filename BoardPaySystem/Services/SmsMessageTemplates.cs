@@ -16,7 +16,7 @@ namespace BoardPaySystem.Services
             var billingPeriod = new DateTime(bill.BillingYear, bill.BillingMonth, 1)
                 .ToString("MMMM yyyy");
 
-            return $"Hello {tenantName}, your bill for {billingPeriod} has been approved. Amount: {bill.TotalAmount:C}. Due date: {bill.DueDate:MM/dd/yyyy}. Please login to your account for details.";
+            return $"Hello {tenantName}, your bill for {billingPeriod} has been approved. Amount: {bill.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))}. Due date: {bill.DueDate:MM/dd/yyyy}. Please login to your account for details.";
         }
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace BoardPaySystem.Services
             var billingPeriod = new DateTime(bill.BillingYear, bill.BillingMonth, 1)
                 .ToString("MMMM yyyy");
 
-            return $"Thank you, {tenantName}. Your payment of {amount:C} for {billingPeriod} has been received and confirmed. Receipt available in your account.";
+            return $"Thank you, {tenantName}. Your payment of {amount.ToString("C", new System.Globalization.CultureInfo("en-PH"))} for {billingPeriod} has been received and confirmed. Receipt available in your account.";
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace BoardPaySystem.Services
             var billingPeriod = new DateTime(bill.BillingYear, bill.BillingMonth, 1)
                 .ToString("MMMM yyyy");
 
-            return $"Reminder: {tenantName}, your payment of {bill.TotalAmount:C} for {billingPeriod} is due on {bill.DueDate:MM/dd/yyyy}. Please login to make your payment.";
+            return $"Reminder: {tenantName}, your payment of {bill.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))} for {billingPeriod} is due on {bill.DueDate:MM/dd/yyyy}. Please login to make your payment.";
         }
 
         /// <summary>
@@ -63,12 +63,12 @@ namespace BoardPaySystem.Services
 
             if (lateFeeAmount > 0)
             {
-                sb.Append($"A late fee of {lateFeeAmount:C} has been applied. ");
-                sb.Append($"New total: {bill.TotalAmount:C}. ");
+                sb.Append($"A late fee of {lateFeeAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))} has been applied. ");
+                sb.Append($"New total: {bill.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))}. ");
             }
             else
             {
-                sb.Append($"Amount due: {bill.TotalAmount:C}. ");
+                sb.Append($"Amount due: {bill.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))}. ");
             }
 
             sb.Append("Please settle your account immediately.");

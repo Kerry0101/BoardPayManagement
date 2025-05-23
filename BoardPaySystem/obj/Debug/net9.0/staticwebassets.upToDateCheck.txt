@@ -67,6 +67,7 @@ wwwroot\css\responsive.css
 wwwroot\css\site.css
 wwwroot\css\tenant-custom.css
 wwwroot\favicon.ico
+wwwroot\Images\logo.jpg
 wwwroot\js\site.js
 wwwroot\lib\bootstrap\dist\css\bootstrap.css
 wwwroot\lib\bootstrap\dist\css\bootstrap.css.map

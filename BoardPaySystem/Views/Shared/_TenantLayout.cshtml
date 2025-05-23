@@ -27,6 +27,7 @@
                         <li><a asp-action="History" asp-controller="Tenant" class="nav-link" data-target="t-history"><i class="fas fa-history"></i> Usage History</a></li>
                         <li><a asp-action="Profile" asp-controller="Tenant" class="nav-link" data-target="t-profile"><i class="fas fa-id-card"></i> My Profile</a></li>
                         <li><a asp-action="Notifications" asp-controller="Tenant" class="nav-link" data-target="t-notifications"><i class="fas fa-bell"></i> Notifications</a></li>
+                        <li><a asp-action="PaymentPolicy" asp-controller="Tenant" class="nav-link text-danger fw-bold" data-target="t-policy"><i class="fas fa-exclamation-triangle me-1"></i> Payment Policy</a></li>
                         <!-- <li><a asp-action="SmsPreferences" asp-controller="Tenant" class="nav-link" data-target="t-sms"><i class="fas fa-mobile-alt"></i> SMS Settings</a></li> -->
                     </ul>
                 </nav>
@@ -50,5 +51,92 @@
     @RenderSection("Scripts", required: false)
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <!-- Payment Policy Modal -->
+    <div class="modal fade" id="paymentPolicyModal" tabindex="-1" aria-labelledby="paymentPolicyModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="paymentPolicyModalLabel"><i class="fas fa-exclamation-triangle me-2"></i> Payment Policy Notice</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <h6 class="fw-bold text-danger mb-2">Late Payment Interest Policy</h6>
+            <p class="mb-2">To ensure fairness and timely payments, the following policy applies to all tenants:</p>
+            <ul class="mb-3" style="font-size:1.05em;">
+              <li><strong>10% Interest on Late Payments:</strong> If your bill is not paid by the due date, a <span class="text-danger fw-bold">10% interest</span> will be automatically added to your total bill amount.</li>
+              <li><strong>How is the interest calculated?</strong> The 10% interest is based on your total bill (including rent, utilities, and other charges).</li>
+              <li><strong>When is the interest applied?</strong> The interest is applied immediately after the due date passes. Your new total due will be updated in your account and reflected in your next statement.</li>
+              <li><strong>How to avoid extra charges?</strong> Always pay your bills on or before the due date. You will receive reminders via SMS and notifications in your account.</li>
+            </ul>
+            <div class="alert alert-info mt-3 mb-0">
+              <i class="fas fa-info-circle me-2"></i>
+              <strong>Thank you for your cooperation and timely payments!</strong>
+            </div>
+            <div class="form-check mt-3">
+              <input class="form-check-input" type="checkbox" value="" id="dontShowPolicyModalAgain">
+              <label class="form-check-label" for="dontShowPolicyModalAgain">
+                Don't show this message again
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer justify-content-end">
+            <a href="@Url.Action("PaymentPolicy", "Tenant")" class="btn btn-danger" style="min-width: 120px;">Learn more</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+    // Show modal unless suppressed by checkbox and not on Payment Policy page
+    function shouldShowPolicyModal() {
+      // Don't show modal if already on Payment Policy page
+      if (window.location.pathname.toLowerCase().includes('/tenant/paymentpolicy')) return false;
+      return !localStorage.getItem('paymentPolicyDontShow');
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var modalEl = document.getElementById('paymentPolicyModal');
+      var learnMoreBtn = modalEl.querySelector('.modal-footer a');
+      var sidebarPolicyLink = document.querySelector('a[data-target="t-policy"]');
+
+      // Intercept sidebar link to close modal and redirect
+      if (sidebarPolicyLink) {
+        sidebarPolicyLink.addEventListener('click', function(e) {
+          if (shouldShowPolicyModal()) {
+            e.preventDefault();
+            var modal = new bootstrap.Modal(modalEl);
+            modal.show();
+            learnMoreBtn.onclick = function(ev) {
+              ev.preventDefault();
+              if (document.getElementById('dontShowPolicyModalAgain').checked) {
+                localStorage.setItem('paymentPolicyDontShow', 'true');
+              }
+              modal.hide();
+              window.location.href = sidebarPolicyLink.href;
+            };
+          }
+        });
+      }
+
+      // Show modal on page load if needed
+      if (shouldShowPolicyModal()) {
+        var modal = new bootstrap.Modal(modalEl);
+        modal.show();
+        learnMoreBtn.onclick = function(ev) {
+          ev.preventDefault();
+          if (document.getElementById('dontShowPolicyModalAgain').checked) {
+            localStorage.setItem('paymentPolicyDontShow', 'true');
+          }
+          modal.hide();
+          window.location.href = learnMoreBtn.href;
+        };
+      }
+
+      // When modal is closed, set localStorage if checkbox is checked
+      modalEl.addEventListener('hide.bs.modal', function() {
+        if (document.getElementById('dontShowPolicyModalAgain').checked) {
+          localStorage.setItem('paymentPolicyDontShow', 'true');
+        }
+      });
+    });
+    </script>
 </body>
 </html>

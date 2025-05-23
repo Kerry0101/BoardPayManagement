@@ -87,7 +87,7 @@
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4 fw-bold">Total Amount:</div>
-                        <div class="col-md-8 fw-bold fs-5">@Model.TotalAmount.ToString("C")</div>
+                        <div class="col-md-8 fw-bold fs-5">@Model.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))</div>
                     </div>
                     @if (Model.Status == BoardPaySystem.Models.BillStatus.Paid)
                     {
@@ -126,41 +126,41 @@
                             <tbody>
                                 <tr>
                                     <td>Room Rent</td>
-                                    <td class="text-end">@Model.Room.RentAmount.ToString("C")</td>
+                                    <td class="text-end">@Model.Room.RentAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                 </tr>
                                 @if (Model.WaterFee > 0)
                                 {
                                     <tr>
                                         <td>Water Charge</td>
-                                        <td class="text-end">@Model.WaterFee.ToString("C")</td>
+                                        <td class="text-end">@Model.WaterFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                     </tr>
                                 }
                                 @if (Model.ElectricityFee > 0)
                                 {
                                     <tr>
                                         <td>Electricity Charge</td>
-                                        <td class="text-end">@Model.ElectricityFee.ToString("C")</td>
+                                        <td class="text-end">@Model.ElectricityFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                     </tr>
                                 }
                                 @if (Model.OtherFees > 0)
                                 {
                                     <tr>
                                         <td>Other Charges</td>
-                                        <td class="text-end">@Model.OtherFees.ToString("C")</td>
+                                        <td class="text-end">@Model.OtherFees.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                     </tr>
                                 }
                                 @if (Model.LateFee > 0)
                                 {
                                     <tr>
                                         <td>Late Fee</td>
-                                        <td class="text-end text-danger">@Model.LateFee.ToString("C")</td>
+                                        <td class="text-end text-danger">@Model.LateFee.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                     </tr>
                                 }
                             </tbody>
                             <tfoot>
                                 <tr class="table-primary">
                                     <td class="fw-bold">Total Amount Due</td>
-                                    <td class="text-end fw-bold">@Model.TotalAmount.ToString("C")</td>
+                                    <td class="text-end fw-bold">@Model.TotalAmount.ToString("C", new System.Globalization.CultureInfo("en-PH"))</td>
                                 </tr>
                             </tfoot>
                         </table>
