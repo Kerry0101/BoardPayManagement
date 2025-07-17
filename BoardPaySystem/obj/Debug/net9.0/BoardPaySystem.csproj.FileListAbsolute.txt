@@ -115,13 +115,11 @@ C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\bin\Debug\net9.0
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\bin\Debug\net9.0\System.Composition.Runtime.dll
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\bin\Debug\net9.0\System.Composition.TypedParts.dll
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\bin\Debug\net9.0\System.Configuration.ConfigurationManager.dll
-C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\bin\Debug\net9.0\System.Formats.Asn1.dll
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\bin\Debug\net9.0\System.IdentityModel.Tokens.Jwt.dll
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\bin\Debug\net9.0\System.Memory.Data.dll
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\bin\Debug\net9.0\System.Reflection.MetadataLoadContext.dll
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\bin\Debug\net9.0\System.Runtime.Caching.dll
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\bin\Debug\net9.0\System.Security.Cryptography.ProtectedData.dll
-C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\bin\Debug\net9.0\System.Text.Json.dll
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\bin\Debug\net9.0\Twilio.dll
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\bin\Debug\net9.0\Twilio.AspNet.Common.dll
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\bin\Debug\net9.0\Twilio.AspNet.Mvc.dll
@@ -419,12 +417,6 @@ C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\staticwebassets.build.json
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\staticwebassets.development.json
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\staticwebassets.build.endpoints.json
-C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\staticwebassets\msbuild.BoardPaySystem.Microsoft.AspNetCore.StaticWebAssets.props
-C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\staticwebassets\msbuild.BoardPaySystem.Microsoft.AspNetCore.StaticWebAssetEndpoints.props
-C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\staticwebassets\msbuild.build.BoardPaySystem.props
-C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\staticwebassets\msbuild.buildMultiTargeting.BoardPaySystem.props
-C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\staticwebassets\msbuild.buildTransitive.BoardPaySystem.props
-C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\staticwebassets.pack.json
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\BoardPay.F84D24C0.Up2Date
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\BoardPaySystem.dll
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\refint\BoardPaySystem.dll
@@ -432,3 +424,8 @@ C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\BoardPaySystem.genruntimeconfig.cache
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\ref\BoardPaySystem.dll
 C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
+C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\rpswa.dswa.cache.json
+C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\rjimswa.dswa.cache.json
+C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\rjsmrazor.dswa.cache.json
+C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\rjsmcshtml.dswa.cache.json
+C:\Users\teche\source\repos\BoardPay-System-IT15\BoardPaySystem\obj\Debug\net9.0\staticwebassets.build.json.cache

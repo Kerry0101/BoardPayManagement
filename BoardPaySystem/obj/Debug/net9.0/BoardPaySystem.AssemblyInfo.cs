@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BoardPaySystem")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0a6bb70bc27651f039f7a1b7c39da110b56416f4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2066be9c295fe139a2b061bad8b868900d176ae1")]
 [assembly: System.Reflection.AssemblyProductAttribute("BoardPaySystem")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BoardPaySystem")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
